@@ -1,0 +1,325 @@
+{% extends 'mainpage/base.html' %}
+{% load static %}
+
+{% block title %}Student Signup | Student Club{% endblock %}
+
+{% block content %}
+<style>
+    .modern-auth-container {
+        min-height: 100vh;
+        display: flex;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .modern-auth-container::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+        border-radius: 50%;
+        z-index: 0;
+    }
+    
+    .modern-auth-container::after {
+        content: '';
+        position: absolute;
+        bottom: -20%;
+        left: -10%;
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%);
+        border-radius: 50%;
+        z-index: 0;
+    }
+    
+    .auth-content {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+    
+    .auth-form-card {
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+        padding: 3.5rem;
+        max-width: 520px;
+        width: 100%;
+        animation: slideInUp 0.6s ease-out;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    @keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(40px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .auth-form-title {
+        margin-bottom: 0.5rem;
+        font-size: 1.8rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #6366f1, #10b981);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .auth-form-subtitle {
+        color: #6b7280;
+        font-size: 0.95rem;
+        margin-bottom: 1.5rem;
+        font-weight: 500;
+    }
+    
+    .form-group-modern {
+        margin-bottom: 1.2rem;
+    }
+    
+    .form-group-modern label {
+        display: block;
+        font-weight: 600;
+        color: #1f2937;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-group-modern label .required {
+        color: #ef4444;
+    }
+    
+    .form-group-modern input,
+    .form-group-modern select {
+        width: 100%;
+        padding: 0.85rem 1rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        font-family: inherit;
+        background: #fafbfc;
+        box-sizing: border-box;
+    }
+    
+    .form-group-modern input:focus,
+    .form-group-modern select:focus {
+        outline: none;
+        border-color: #6366f1;
+        background: white;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+    
+    .form-group-modern input::placeholder {
+        color: #9ca3af;
+    }
+    
+    .invalid-feedback {
+        color: #ef4444;
+        font-size: 0.85rem;
+        margin-top: 0.4rem;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    
+    .help-text {
+        color: #6b7280;
+        font-size: 0.8rem;
+        margin-top: 0.3rem;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    
+    .submit-btn {
+        width: 100%;
+        padding: 1rem;
+        background: linear-gradient(135deg, #6366f1, #818cf8);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 1rem;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+    }
+    
+    .auth-footer {
+        text-align: center;
+        margin-top: 1.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e5e7eb;
+        color: #6b7280;
+        font-size: 0.9rem;
+    }
+    
+    .auth-footer a {
+        color: #6366f1;
+        text-decoration: none;
+        font-weight: 700;
+        transition: color 0.3s ease;
+    }
+    
+    .auth-footer a:hover {
+        color: #818cf8;
+    }
+    
+    .alert-custom {
+        background: rgba(239, 68, 68, 0.1);
+        color: #991b1b;
+        padding: 0.9rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        border-left: 4px solid #ef4444;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.6rem;
+        font-size: 0.9rem;
+    }
+    
+    .security-badge {
+        background: #f0f4ff;
+        border-top: 1px solid #e0e7ff;
+        padding: 1rem;
+        border-radius: 0 0 24px 24px;
+        text-align: center;
+        color: #6366f1;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .auth-form-card {
+            padding: 1.5rem;
+            margin: 1rem;
+        }
+        
+        .auth-form-title {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+
+<!-- DateTime Display -->
+<div style="position: fixed; top: 80px; right: 20px; background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%); color: white; padding: 1rem 1.5rem; border-radius: 12px; box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3); font-family: 'Courier New', monospace; z-index: 1000; animation: slideInDown 0.6s ease-out;">
+    <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem;" id="time">00:00</div>
+    <div style="font-size: 0.8rem; opacity: 0.9;" id="date">Monday, Jan 1</div>
+</div>
+
+<div class="modern-auth-container">
+    <div class="auth-content">
+        <div class="auth-form-card">
+            <!-- Header -->
+            <h1 class="auth-form-title">Create Account</h1>
+            <p class="auth-form-subtitle">Join the student community today</p>
+
+            <!-- Error Messages -->
+            {% if form.non_field_errors %}
+                <div class="alert-custom">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <div>
+                        {% for error in form.non_field_errors %}
+                            {{ error }}<br>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Signup Form -->
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <!-- Dynamic Form Fields -->
+                {% for field in form %}
+                    <div class="form-group-modern">
+                        <label for="{{ field.id_for_label }}">
+                            {% if field.field.required %}<span class="required">*</span>{% endif %}
+                            {{ field.label }}
+                        </label>
+                        
+                        {{ field }}
+                        
+                        {% if field.errors %}
+                            <div class="invalid-feedback">
+                                <i class="fas fa-times-circle"></i>
+                                {% for error in field.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        {% if field.help_text %}
+                            <div class="help-text">
+                                <i class="fas fa-lightbulb"></i>{{ field.help_text|safe }}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+
+                <!-- Submit Button -->
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-check-circle"></i>Create Account
+                </button>
+            </form>
+
+            <!-- Footer -->
+            <div class="auth-footer">
+                Already have an account? <a href="{% url 'student_login' %}">Student Login</a>
+            </div>
+
+            <!-- Security Badge -->
+            <div class="security-badge">
+                <i class="fas fa-lock"></i>Your information is secure and protected
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateDateTime() {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const dayName = days[now.getDay()];
+    const monthName = months[now.getMonth()];
+    const date = now.getDate();
+    
+    document.getElementById('time').textContent = `${hours}:${minutes}`;
+    document.getElementById('date').textContent = `${dayName}, ${monthName} ${date}`;
+}
+updateDateTime();
+setInterval(updateDateTime, 1000);
+</script>
+{% endblock %}

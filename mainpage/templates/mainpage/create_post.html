@@ -1,0 +1,223 @@
+{% extends 'mainpage/base.html' %}
+{% load static %}
+
+{% block title %}Create Post | Student Club{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Create Post Card -->
+            <div class="card shadow-lg border-0" style="border-radius: 20px; overflow: hidden;">
+                <!-- Header -->
+                <div style="background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%); padding: 2rem; text-align: center;">
+                    <h1 style="color: white; font-size: 1.8rem; margin: 0; font-weight: 800;">
+                        <i class="fas fa-pen-fancy me-2"></i>Create a Post
+                    </h1>
+                    <p style="color: rgba(255,255,255,0.9); margin: 0.5rem 0 0; font-weight: 500;">Share with {{ student.club.name }}</p>
+                </div>
+
+                <div class="card-body p-4">
+                    <form method="post" enctype="multipart/form-data" novalidate>
+                        {% csrf_token %}
+
+                        <!-- Error Messages -->
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert" style="border-radius: 10px; border: none; border-left: 4px solid #ef4444;">
+                                <i class="fas fa-exclamation-circle me-2"></i>
+                                {{ form.non_field_errors }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endif %}
+
+                        <!-- Post Title -->
+                        <div class="mb-4">
+                            <label class="form-label" for="id_title">
+                                <i class="fas fa-heading me-2" style="color: #6366f1;"></i>
+                                <strong>Post Title (Optional)</strong>
+                            </label>
+                            <input 
+                                type="text" 
+                                id="id_title"
+                                name="title"
+                                class="form-control {% if form.title.errors %}is-invalid{% endif %}" 
+                                placeholder="Give your post a catchy title..."
+                                style="height: 45px; border-radius: 10px;"
+                            >
+                            {% if form.title.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.title.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Post Content -->
+                        <div class="mb-4">
+                            <label class="form-label" for="id_content">
+                                <i class="fas fa-file-alt me-2" style="color: #6366f1;"></i>
+                                <strong>What's on your mind?</strong>
+                            </label>
+                            <textarea 
+                                id="id_content"
+                                name="content"
+                                class="form-control {% if form.content.errors %}is-invalid{% endif %}" 
+                                placeholder="Share your thoughts, updates, or announcements..."
+                                style="min-height: 150px; border-radius: 10px; resize: vertical;"
+                                required
+                            ></textarea>
+                            {% if form.content.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.content.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Image Upload -->
+                        <div class="mb-4">
+                            <label class="form-label" for="id_image">
+                                <i class="fas fa-image me-2" style="color: #10b981;"></i>
+                                <strong>Add an Image</strong>
+                            </label>
+                            <div class="custom-file-upload" style="border: 2px dashed #d1d5db; border-radius: 10px; padding: 2rem; text-align: center; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.borderColor='#6366f1'; this.style.background='rgba(99,102,241,0.05)'" onmouseout="this.style.borderColor='#d1d5db'; this.style.background='transparent'">
+                                <input 
+                                    type="file" 
+                                    id="id_image"
+                                    name="image"
+                                    class="d-none"
+                                    accept="image/*"
+                                    onchange="previewImage(event)"
+                                >
+                                <label for="id_image" style="cursor: pointer; margin: 0;">
+                                    <i class="fas fa-cloud-upload-alt" style="font-size: 2.5rem; color: #6366f1; display: block; margin-bottom: 0.5rem;"></i>
+                                    <p style="margin: 0; font-weight: 600; color: #1f2937;">Click to upload an image</p>
+                                    <p style="margin: 0.5rem 0 0; color: #6b7280; font-size: 0.9rem;">PNG, JPG, GIF up to 10MB</p>
+                                </label>
+                            </div>
+                            <div id="imagePreviewContainer" style="margin-top: 1rem; display: none;">
+                                <img id="imagePreview" style="max-width: 100%; max-height: 400px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                                <button type="button" onclick="removeImage()" class="btn btn-sm btn-danger mt-2">
+                                    <i class="fas fa-trash me-1"></i>Remove Image
+                                </button>
+                            </div>
+                            {% if form.image.errors %}
+                                <div class="alert alert-danger mt-2" style="border-radius: 10px;">
+                                    {{ form.image.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Video Upload -->
+                        <div class="mb-4">
+                            <label class="form-label" for="id_video">
+                                <i class="fas fa-video me-2" style="color: #f59e0b;"></i>
+                                <strong>Add a Video</strong>
+                            </label>
+                            <div class="custom-file-upload" style="border: 2px dashed #d1d5db; border-radius: 10px; padding: 2rem; text-align: center; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.borderColor='#f59e0b'; this.style.background='rgba(245,158,11,0.05)'" onmouseout="this.style.borderColor='#d1d5db'; this.style.background='transparent'">
+                                <input 
+                                    type="file" 
+                                    id="id_video"
+                                    name="video"
+                                    class="d-none"
+                                    accept="video/*"
+                                    onchange="previewVideo(event)"
+                                >
+                                <label for="id_video" style="cursor: pointer; margin: 0;">
+                                    <i class="fas fa-cloud-upload-alt" style="font-size: 2.5rem; color: #f59e0b; display: block; margin-bottom: 0.5rem;"></i>
+                                    <p style="margin: 0; font-weight: 600; color: #1f2937;">Click to upload a video</p>
+                                    <p style="margin: 0.5rem 0 0; color: #6b7280; font-size: 0.9rem;">MP4, WebM, OGG up to 50MB</p>
+                                </label>
+                            </div>
+                            <div id="videoPreviewContainer" style="margin-top: 1rem; display: none;">
+                                <video id="videoPreview" style="max-width: 100%; max-height: 400px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);" controls></video>
+                                <button type="button" onclick="removeVideo()" class="btn btn-sm btn-danger mt-2">
+                                    <i class="fas fa-trash me-1"></i>Remove Video
+                                </button>
+                            </div>
+                            {% if form.video.errors %}
+                                <div class="alert alert-danger mt-2" style="border-radius: 10px;">
+                                    {{ form.video.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 2rem;">
+                            <a href="{% url 'student_home' %}" class="btn btn-outline-secondary" style="border-radius: 10px; font-weight: 600; border: 2px solid #6b7280; color: #6b7280;">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary" style="border-radius: 10px; font-weight: 600;">
+                                <i class="fas fa-paper-plane me-2"></i>Publish Post
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function previewImage(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('imagePreview').src = e.target.result;
+            document.getElementById('imagePreviewContainer').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function removeImage() {
+    document.getElementById('id_image').value = '';
+    document.getElementById('imagePreviewContainer').style.display = 'none';
+}
+
+function previewVideo(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('videoPreview').src = e.target.result;
+            document.getElementById('videoPreviewContainer').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function removeVideo() {
+    document.getElementById('id_video').value = '';
+    document.getElementById('videoPreviewContainer').style.display = 'none';
+}
+
+// Auto-hide alerts after 5 seconds
+document.addEventListener('DOMContentLoaded', function() {
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        }, 5000);
+    });
+});
+</script>
+
+<style>
+.is-invalid {
+    border-color: #ef4444 !important;
+}
+
+.invalid-feedback {
+    color: #ef4444 !important;
+    font-size: 0.85rem !important;
+    margin-top: 0.5rem !important;
+}
+
+.btn-outline-secondary:hover {
+    background: #6b7280;
+    border-color: #6b7280;
+    color: white;
+}
+</style>
+{% endblock %}

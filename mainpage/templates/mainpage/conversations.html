@@ -1,0 +1,112 @@
+{% extends 'mainpage/base.html' %}
+
+{% block title %}Messages - Student Club{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3>Messages</h3>
+                </div>
+                <div class="card-body">
+                    {% if conversation_data %}
+                        <div class="list-group">
+                            {% for item in conversation_data %}
+                                <div class="list-group-item">
+                                    <div class="row align-items-center">
+                                        <div class="col">
+                                            <div class="d-flex align-items-center">
+                                                {% if item.is_blocked %}
+                                                    <span class="badge badge-danger me-2">BLOCKED</span>
+                                                {% endif %}
+                                                <h5 class="mb-0">
+                                                    <a href="{% url 'message_thread' item.student.id %}">
+                                                        {{ item.student.name }}
+                                                    </a>
+                                                </h5>
+                                                <small class="text-muted ms-2">({{ item.student.club.name }})</small>
+                                            </div>
+                                            {% if item.latest_message %}
+                                                <small class="text-muted d-block mt-1">
+                                                    {% if item.latest_message.sender == student %}
+                                                        <strong>You:</strong>
+                                                    {% else %}
+                                                        <strong>{{ item.latest_message.sender.name }}:</strong>
+                                                    {% endif %}
+                                                    {{ item.latest_message.content|truncatewords:10 }}
+                                                </small>
+                                                <small class="text-muted">
+                                                    {{ item.latest_message.created_at|date:"M d, Y H:i" }}
+                                                </small>
+                                                {% if item.latest_message.contains_warning %}
+                                                    <span class="badge badge-warning ms-2">Contains inappropriate content</span>
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-auto">
+                                            {% if not item.is_blocked %}
+                                                <a href="{% url 'message_thread' item.student.id %}" class="btn btn-sm btn-primary">
+                                                    Open
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No conversations yet. Start a conversation with someone from your club!</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h4>Start a New Conversation</h4>
+                </div>
+                <div class="card-body">
+                    <p>Select a member from your club to start chatting:</p>
+                    <div id="available-users" class="list-group">
+                        <p class="text-muted">Loading...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('{% url "get_available_users" %}')
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('available-users');
+            container.innerHTML = '';
+            
+            if (data.users.length === 0) {
+                container.innerHTML = '<p class="text-muted">No members available to message.</p>';
+            } else {
+                data.users.forEach(user => {
+                    const link = document.createElement('a');
+                    link.href = `/messages/${user.id}/`;
+                    link.className = 'list-group-item list-group-item-action';
+                    link.textContent = user.name;
+                    container.appendChild(link);
+                });
+            }
+        });
+});
+</script>
+
+<style>
+.list-group-item {
+    border-left: 4px solid #007bff;
+}
+
+.badge {
+    padding: 0.35em 0.65em;
+}
+</style>
+{% endblock %}

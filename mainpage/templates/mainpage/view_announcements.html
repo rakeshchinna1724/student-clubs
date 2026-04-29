@@ -1,0 +1,159 @@
+{% extends 'mainpage/base.html' %}
+
+{% block title %}Announcements | Student Club{% endblock %}
+
+{% block content %}
+    <!-- Hero Section -->
+    <section class="page-head" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%), url('https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1200&q=80') center/cover; padding: 4rem 2rem; margin-bottom: 3rem; border-radius: 20px; color: white; position: relative; overflow: hidden; box-shadow: 0 20px 60px rgba(99,102,241,0.2);">
+        <div style="position: relative; z-index: 1;">
+            <p class="eyebrow" style="text-transform: uppercase; font-size: 12px; letter-spacing: 2px; opacity: 0.9; margin-bottom: 8px;">Updates & News</p>
+            <h1 style="font-size: 3rem; font-weight: 900; color: white; text-shadow: 0 2px 10px rgba(0,0,0,0.2);">Club Announcements</h1>
+            <p class="lead" style="font-size: 1.2rem; color: rgba(255,255,255,0.95); margin-bottom: 0;">Important updates from <strong>{{ student.club.name }}</strong></p>
+        </div>
+    </section>
+
+    <div class="content-grid">
+    <section style="margin-bottom: 3rem;">
+        {% if announcements %}
+            <div class="announcements-container">
+                {% for announcement in announcements %}
+                    <article class="announcement-card {% if announcement.is_important %}important{% endif %}" style="background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 32px rgba(31, 41, 55, 0.1); border: 1px solid rgba(99,102,241,0.1); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); animation: slideInUp 0.6s ease-out; margin-bottom: 20px; {% if announcement.is_important %}border-left: 4px solid #ef4444;{% else %}border-left: 4px solid #6366f1;{% endif %}">
+                        <div class="announcement-header" style="background: linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(16,185,129,0.08) 100%); padding: 1.5rem; border-bottom: 1px solid rgba(99,102,241,0.15); display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div class="announcement-title-section" style="flex: 1;">
+                                {% if announcement.is_important %}
+                                    <span class="important-badge" style="display: inline-block; padding: 6px 12px; background: linear-gradient(135deg, #ef4444, #fca5a5); color: white; border-radius: 8px; font-size: 12px; font-weight: 600; margin-bottom: 8px;">⚠️ Important</span>
+                                {% endif %}
+                                <h3 style="font-size: 1.3rem; font-weight: 700; color: #0f172a; margin: 0;">{{ announcement.title }}</h3>
+                            </div>
+                            <span class="announcement-date" style="color: #334155; font-size: 14px; white-space: nowrap; margin-left: 16px; font-weight: 500;">{{ announcement.created_at|date:"M d, Y" }}</span>
+                        </div>
+                        
+                        <div class="announcement-content" style="padding: 1.5rem; color: #334155; line-height: 1.8; font-weight: 500;">
+                            {{ announcement.content|linebreaks }}
+                        </div>
+                        
+                        <div class="announcement-footer" style="padding: 1rem 1.5rem; background: rgba(99,102,241,0.05); border-top: 1px solid rgba(99,102,241,0.1); display: flex; align-items: center; gap: 8px;">
+                            <span style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #818cf8); display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 700;">{{ announcement.created_by.username|first|upper }}</span>
+                            <small style="color: #334155; font-size: 13px; font-weight: 500;">By <strong style="color: #0f172a;">{{ announcement.created_by.username }}</strong></small>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state table-card">
+                <p>No announcements yet. Check back later!</p>
+                <a class="btn" href="{% url 'student_home' %}">Back to Feed</a>
+            </div>
+        {% endif %}
+    </section>
+    </div>
+
+    <style>
+        .announcements-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .announcement-card {
+            border: 1px solid #e0e0e0;
+            border-left: 4px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s;
+        }
+
+        .announcement-card.important {
+            border-left-color: #ff6b6b;
+            background: #fff5f5;
+            box-shadow: 0 1px 4px rgba(255, 107, 107, 0.15);
+        }
+
+        .announcement-card:hover {
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .announcement-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            gap: 1rem;
+        }
+
+        .announcement-title-section {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .important-badge {
+            display: inline-block;
+            padding: 0.35rem 0.75rem;
+            background: #ffe0e0;
+            color: #d32f2f;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .announcement-title-section h3 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: #333;
+        }
+
+        .announcement-date {
+            font-size: 0.85rem;
+            color: #999;
+            white-space: nowrap;
+        }
+
+        .announcement-content {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .announcement-footer {
+            color: #999;
+            font-size: 0.85rem;
+            border-top: 1px solid #f0f0f0;
+            padding-top: 0.75rem;
+        }
+
+        .empty-state {
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .empty-state p {
+            margin-bottom: 1.5rem;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #45a049;
+        }
+    </style>
+{% endblock %}

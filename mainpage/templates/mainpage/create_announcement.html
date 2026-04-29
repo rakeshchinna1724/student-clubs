@@ -1,0 +1,181 @@
+{% extends 'mainpage/base.html' %}
+
+{% block title %}Create Announcement | Student Club{% endblock %}
+
+{% block content %}
+    <section class="page-head">
+        <div>
+            <p class="eyebrow">Create Announcement</p>
+            <h1>Post an Announcement</h1>
+            <p class="lead">Share important updates with all students in {{ club.name }}</p>
+        </div>
+    </section>
+
+    <div class="content-grid">
+    <section>
+        <div class="form-card">
+            <form method="POST" class="form">
+                {% csrf_token %}
+                <fieldset>
+                    <legend>Announcement Content</legend>
+                    
+                    <div class="form-group">
+                        <label for="id_title">Title</label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <span class="error">{{ form.title.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_content">Content</label>
+                        {{ form.content }}
+                        {% if form.content.errors %}
+                            <span class="error">{{ form.content.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group checkbox-group">
+                        {{ form.is_important }}
+                        <label for="id_is_important" class="checkbox-label">
+                            Mark as Important
+                        </label>
+                        <p class="checkbox-help">Important announcements will be highlighted for all students</p>
+                    </div>
+                </fieldset>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn">Post Announcement & Notify</button>
+                    <a href="{% url 'club_dashboard' %}" class="btn btn-outline">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </section>
+    </div>
+
+    <style>
+        .form-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 2rem;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            max-width: 700px;
+        }
+
+        .form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        fieldset {
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        legend {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        label {
+            font-weight: 500;
+            color: #333;
+        }
+
+        input[type="text"],
+        textarea {
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            margin-top: 5px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .checkbox-label {
+            font-weight: 500;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .checkbox-help {
+            margin: 0;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .error {
+            color: #d32f2f;
+            font-size: 0.85rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #45a049;
+        }
+
+        .btn-outline {
+            background: white;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        .btn-outline:hover {
+            background: #f5f5f5;
+        }
+    </style>
+{% endblock %}

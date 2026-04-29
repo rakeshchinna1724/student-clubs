@@ -1,0 +1,148 @@
+{% extends 'mainpage/base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard | Student Club{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <section class="dashboard-hero">
+        <div>
+            <span class="dashboard-hero__eyebrow">Club command center</span>
+            <h1>{{ club.name }} admin dashboard</h1>
+            <p>Track registered students, current activity, and publishing tools from one place.</p>
+        </div>
+        <div class="dashboard-hero__meta">
+            <div>
+                <span>Admin</span>
+                <strong>{{ club.admin.username }}</strong>
+            </div>
+            <div>
+                <span>Created</span>
+                <strong>{{ club.created_at|date:"M d, Y" }}</strong>
+            </div>
+        </div>
+    </section>
+
+    <section class="dashboard-metric-grid">
+        <article class="metric-card metric-card--violet">
+            <span>Registered students</span>
+            <strong>{{ dashboard_stats.members_count }}</strong>
+        </article>
+        <article class="metric-card metric-card--emerald">
+            <span>Posts published</span>
+            <strong>{{ dashboard_stats.posts_count }}</strong>
+        </article>
+        <article class="metric-card metric-card--amber">
+            <span>Events created</span>
+            <strong>{{ dashboard_stats.events_count }}</strong>
+        </article>
+        <article class="metric-card metric-card--rose">
+            <span>Total engagement</span>
+            <strong>{{ dashboard_stats.engagement_count }}</strong>
+        </article>
+    </section>
+
+    <section class="dashboard-actions">
+        <a href="{% url 'create_event' %}" class="btn btn-primary"><i class="fas fa-calendar-plus me-2"></i>Create Event</a>
+        <a href="{% url 'create_announcement' %}" class="btn btn-secondary"><i class="fas fa-bullhorn me-2"></i>Create Announcement</a>
+        <a href="{% url 'logout' %}" class="btn btn-outline-primary"><i class="fas fa-right-from-bracket me-2"></i>Logout</a>
+    </section>
+
+    <div class="dashboard-grid">
+        <section class="dashboard-panel">
+            <div class="dashboard-panel__header">
+                <div>
+                    <h2>Registered students</h2>
+                    <p>Everyone currently mapped to {{ club.name }}</p>
+                </div>
+                <span class="panel-badge">{{ dashboard_stats.members_count }} total</span>
+            </div>
+
+            {% if students %}
+                <div class="members-table-wrap">
+                    <table class="members-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Department</th>
+                                <th>Joined</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                                <tr>
+                                    <td>{{ student.name }}</td>
+                                    <td>{{ student.user.username }}</td>
+                                    <td>{{ student.email }}</td>
+                                    <td>{{ student.department }}</td>
+                                    <td>{{ student.joined_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        <a href="{% url 'admin_edit_student_password' student.id %}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-key me-1"></i>Password
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="dashboard-empty">No students have registered for this club yet.</div>
+            {% endif %}
+        </section>
+
+        <section class="dashboard-stack">
+            <article class="dashboard-panel">
+                <div class="dashboard-panel__header">
+                    <div>
+                        <h2>Recent registrations</h2>
+                        <p>Latest members who joined this club</p>
+                    </div>
+                </div>
+                {% if recent_members %}
+                    <div class="activity-list">
+                        {% for student in recent_members %}
+                            <div class="activity-item">
+                                <div class="activity-item__icon"><i class="fas fa-user-plus"></i></div>
+                                <div>
+                                    <strong>{{ student.name }}</strong>
+                                    <span>{{ student.department }} | {{ student.joined_at|date:"M d, Y H:i" }}</span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="dashboard-empty">Recent registrations will show up here.</div>
+                {% endif %}
+            </article>
+
+            <article class="dashboard-panel">
+                <div class="dashboard-panel__header">
+                    <div>
+                        <h2>Recent posts</h2>
+                        <p>Latest content shared in the club</p>
+                    </div>
+                </div>
+                {% if recent_posts %}
+                    <div class="activity-list">
+                        {% for post in recent_posts %}
+                            <div class="activity-item">
+                                <div class="activity-item__icon"><i class="fas fa-file-lines"></i></div>
+                                <div>
+                                    <strong>{{ post.title|default:"Untitled post" }}</strong>
+                                    <span>by {{ post.student.name }} | {{ post.created_at|date:"M d, Y H:i" }}</span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="dashboard-empty">Posts will appear here once members start sharing.</div>
+                {% endif %}
+            </article>
+        </section>
+    </div>
+</div>
+{% endblock %}

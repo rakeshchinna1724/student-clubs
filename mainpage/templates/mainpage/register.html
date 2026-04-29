@@ -1,0 +1,30 @@
+{% extends 'mainpage/base.html' %}
+
+{% block title %}Register Student | Student Club{% endblock %}
+
+{% block content %}
+    <section class="hero-grid">
+        <div class="hero-panel">
+            <p class="eyebrow">{{ club.name }}</p>
+            <h1>Register a student</h1>
+            <p class="lead">Create a student login and save their details under your club.</p>
+        </div>
+
+        <form class="form-card" method="post">
+            <h2>Student account</h2>
+            <p class="form-note">Share the username and temporary password with the student after saving.</p>
+        {% csrf_token %}
+            {% for field in form %}
+                <div class="form-field">
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {{ field.errors }}
+                </div>
+            {% endfor %}
+            <div class="form-footer">
+                <a href="{% url 'club_dashboard' %}">View dashboard</a>
+                <button class="btn" type="submit">Save student</button>
+            </div>
+        </form>
+    </section>
+{% endblock %}

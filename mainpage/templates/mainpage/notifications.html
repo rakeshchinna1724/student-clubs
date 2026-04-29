@@ -1,0 +1,230 @@
+{% extends 'mainpage/base.html' %}
+
+{% block title %}Notifications | Student Club{% endblock %}
+
+{% block content %}
+    <!-- Hero Section -->
+    <section class="page-head" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%), url('https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1200&q=80') center/cover; padding: 4rem 2rem; margin-bottom: 3rem; border-radius: 20px; color: white; position: relative; overflow: hidden; box-shadow: 0 20px 60px rgba(99,102,241,0.2);">
+        <div style="position: relative; z-index: 1;">
+            <p class="eyebrow" style="text-transform: uppercase; font-size: 12px; letter-spacing: 2px; opacity: 0.9; margin-bottom: 8px;">Activity Feed</p>
+            <h1 style="font-size: 3rem; font-weight: 900; color: white; text-shadow: 0 2px 10px rgba(0,0,0,0.2);">Your Updates</h1>
+            <p class="lead" style="font-size: 1.2rem; color: rgba(255,255,255,0.95); margin-bottom: 0;">
+                <span style="display: inline-block; background: linear-gradient(135deg, #f59e0b, #fbbf24); padding: 4px 12px; border-radius: 20px; font-weight: 600;">{{ unread_count }}</span>
+                unread notification{% if unread_count != 1 %}s{% endif %}
+            </p>
+        </div>
+    </section>
+
+    <div class="content-grid">
+    <section style="margin-bottom: 3rem;">
+        {% if notifications %}
+            <div class="notifications-container">
+                {% for notification in notifications %}
+                    <article class="notification-card {% if not notification.is_read %}unread{% endif %}" style="background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 32px rgba(31, 41, 55, 0.1); border: 1px solid rgba(99,102,241,0.1); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); animation: slideInUp 0.6s ease-out; margin-bottom: 20px; {% if not notification.is_read %}background: linear-gradient(135deg, rgba(99,102,241,0.05), rgba(16,185,129,0.05)); border-left: 4px solid #6366f1;{% else %}border-left: 4px solid #d1d5db;{% endif %}">
+                        <div class="notification-header" style="padding: 1.5rem; border-bottom: 1px solid rgba(99,102,241,0.15); display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div class="notification-type-badge" style="flex: 1;">
+                                {% if notification.notification_type == 'event' %}
+                                    <span class="badge badge-event" style="display: inline-block; padding: 6px 12px; background: linear-gradient(135deg, #6366f1, #818cf8); color: white; border-radius: 8px; font-size: 12px; font-weight: 600; margin-bottom: 8px;">📅 Event</span>
+                                {% elif notification.notification_type == 'announcement' %}
+                                    <span class="badge badge-announcement" style="display: inline-block; padding: 6px 12px; background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; border-radius: 8px; font-size: 12px; font-weight: 600; margin-bottom: 8px;">📢 Announcement</span>
+                                {% elif notification.notification_type == 'post_like' %}
+                                    <span class="badge badge-like" style="display: inline-block; padding: 6px 12px; background: linear-gradient(135deg, #ec4899, #fb7185); color: white; border-radius: 8px; font-size: 12px; font-weight: 600; margin-bottom: 8px;">❤️ Like</span>
+                                {% elif notification.notification_type == 'post_comment' %}
+                                    <span class="badge badge-comment" style="display: inline-block; padding: 6px 12px; background: linear-gradient(135deg, #10b981, #34d399); color: white; border-radius: 8px; font-size: 12px; font-weight: 600; margin-bottom: 8px;">💬 Comment</span>
+                                {% elif notification.notification_type == 'post_share' %}
+                                    <span class="badge badge-share" style="display: inline-block; padding: 6px 12px; background: linear-gradient(135deg, #0ea5e9, #38bdf8); color: white; border-radius: 8px; font-size: 12px; font-weight: 600; margin-bottom: 8px;">📤 Share</span>
+                                {% endif %}
+                            </div>
+                            <span class="notification-time" style="color: #334155; font-size: 12px; white-space: nowrap; margin-left: 16px; font-weight: 500;">{{ notification.created_at|date:"M d H:i" }}</span>
+                        </div>
+                        
+                        <div class="notification-content" style="padding: 1.5rem;">
+                            <h3 style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin: 0 0 8px;">{{ notification.title }}</h3>
+                            <p style="color: #334155; margin: 0; line-height: 1.6; font-weight: 500;">{{ notification.message }}</p>
+                        </div>
+                        
+                        {% if notification.related_event %}
+                            <div class="notification-detail">
+                                <strong>Date:</strong> {{ notification.related_event.event_date|date:"F d, Y \a\t g:i A" }}
+                                {% if notification.related_event.location %}
+                                    <br><strong>Location:</strong> {{ notification.related_event.location }}
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="notification-actions">
+                            {% if not notification.is_read %}
+                                <form method="POST" action="{% url 'mark_notification_read' notification.id %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="action-link">Mark as read</button>
+                                </form>
+                            {% else %}
+                                <span class="read-indicator">✓ Read</span>
+                            {% endif %}
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state table-card">
+                <p>No notifications yet. Check back later for updates!</p>
+                <a class="btn" href="{% url 'student_home' %}">Back to Feed</a>
+            </div>
+        {% endif %}
+    </section>
+    </div>
+
+    <style>
+        .notifications-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .notification-card {
+            border: 1px solid #e0e0e0;
+            border-left: 4px solid #f0f0f0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s;
+        }
+
+        .notification-card.unread {
+            border-left-color: #4CAF50;
+            background: #f8fff7;
+            box-shadow: 0 1px 4px rgba(76, 175, 80, 0.15);
+        }
+
+        .notification-card:hover {
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .notification-type-badge {
+            display: inline-block;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .badge-event {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .badge-announcement {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        .badge-like {
+            background: #fce4ec;
+            color: #c2185b;
+        }
+
+        .badge-comment {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .badge-share {
+            background: #e0f2f1;
+            color: #00695c;
+        }
+
+        .notification-time {
+            font-size: 0.85rem;
+            color: #999;
+        }
+
+        .notification-content h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.1rem;
+            color: #333;
+        }
+
+        .notification-content p {
+            margin: 0;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .notification-detail {
+            background: #f5f5f5;
+            padding: 0.75rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        .notification-detail strong {
+            color: #333;
+        }
+
+        .notification-actions {
+            margin-top: 1rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-link {
+            background: none;
+            border: none;
+            color: #4CAF50;
+            cursor: pointer;
+            font-weight: 500;
+            text-decoration: underline;
+            padding: 0;
+        }
+
+        .action-link:hover {
+            color: #45a049;
+        }
+
+        .read-indicator {
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        .empty-state {
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .empty-state p {
+            margin-bottom: 1.5rem;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #45a049;
+        }
+    </style>
+{% endblock %}

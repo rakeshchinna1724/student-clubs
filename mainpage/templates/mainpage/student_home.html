@@ -1,0 +1,299 @@
+﻿{% extends 'mainpage/base.html' %}
+{% load static %}
+
+{% block title %}Home | Student Club{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Hero Section with Background Image -->
+    <div class="hero-section" style="background: linear-gradient(135deg, rgba(99,102,241,0.9) 0%, rgba(16,185,129,0.8) 100%), url('https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1200&q=80') center/cover; border-radius: 20px; padding: 4rem 3rem; margin-bottom: 3rem; text-align: center; color: white; position: relative; overflow: hidden; box-shadow: 0 20px 60px rgba(99,102,241,0.2);">
+        <div style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%); border-radius: 50%;"></div>
+        <div style="position: absolute; bottom: -30px; left: -30px; width: 150px; height: 150px; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%); border-radius: 50%;"></div>
+        
+        <div style="position: relative; z-index: 1;">
+            <h1 class="hero-title" style="color: white; text-shadow: 0 4px 15px rgba(0,0,0,0.3); animation: slideInUp 0.8s ease-out; font-size: 3.5rem; font-weight: 900; margin-bottom: 1rem;">
+                Welcome back, <span style="color: #fbbf24; text-shadow: 0 2px 8px rgba(0,0,0,0.4); font-weight: 900; background: linear-gradient(135deg, #fbbf24, #fef08a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">{{ user.username }}</span>
+            </h1>
+            <p class="hero-subtitle" style="color: white; animation: slideInUp 0.8s ease-out 0.2s both; font-size: 1.3rem; font-weight: 600; text-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+                {{ student.club.name }} Community Feed
+            </p>
+            <a href="{% url 'create_post' %}" class="btn btn-primary btn-lg" style="border-radius: 12px; background: linear-gradient(135deg, #f59e0b, #f97316); border: none; color: white; padding: 14px 32px; font-weight: 600; box-shadow: 0 4px 15px rgba(245,158,11,0.3); transition: all 0.3s ease; animation: slideInUp 0.8s ease-out 0.4s both; display: inline-block;">
+                <i class="fas fa-pen-fancy me-2"></i>Create a New Post
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Feed -->
+        <div class="col-lg-8">
+            {% if posts %}
+                {% for post in posts %}
+                    <div class="post-card" id="post-{{ post.id }}" style="margin-bottom: 2rem; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 32px rgba(31, 41, 55, 0.1); background: white; border: 1px solid rgba(99,102,241,0.1); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); animation: slideInUp 0.6s ease-out;">
+                        <!-- Post Header -->
+                        <div class="post-header" style="background: linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(16,185,129,0.08) 100%); padding: 1.5rem; border-bottom: 1px solid rgba(99,102,241,0.15); display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div>
+                                <h4 class="post-author" style="margin: 0; font-weight: 700; color: #0f172a; display: flex; align-items: center;">
+                                    <span style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #818cf8); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; margin-right: 12px;">{{ post.student.user.username|first|upper }}</span>
+                                    {{ post.student.user.username }}
+                                </h4>
+                                <p class="post-time" style="margin: 0.3rem 0 0 52px; color: #334155; font-size: 0.85rem; font-weight: 500;">
+                                    <i class="fas fa-clock me-1"></i>
+                                    {{ post.created_at|date:"M d, Y H:i" }}
+                                </p>
+                            </div>
+                            {% if post.student.user == user %}
+                                <button class="btn btn-sm btn-outline-danger" onclick="deletePost({{ post.id }}, event)" style="transition: all 0.3s ease;">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            {% endif %}
+                        </div>
+
+                        {% if post.title %}
+                            <div style="padding: 0 1.5rem; padding-top: 1rem;">
+                                <h3 style="font-size: 1.3rem; font-weight: 700; color: #0f172a; margin: 0 0 0.5rem;">
+                                    {{ post.title }}
+                                </h3>
+                            </div>
+                        {% endif %}
+
+                        <div style="padding: 0 1.5rem; {% if post.title %}padding-top: 0;{% else %}padding-top: 1rem;{% endif %}")>
+                            <p class="post-body" style="margin: 0 0 1rem; color: #334155; line-height: 1.6; font-weight: 500;">
+                                {{ post.content }}
+                            </p>
+                        </div>
+
+                        {% if post.image or post.video %}
+                            <div style="padding: 0 1.5rem;">
+                                {% if post.image %}
+                                    <img src="{{ post.image.url }}" alt="Post image" style="width: 100%; max-height: 500px; border-radius: 12px; object-fit: cover; margin-bottom: 1rem;">
+                                {% endif %}
+                                {% if post.video %}
+                                    <video style="width: 100%; max-height: 500px; border-radius: 12px; margin-bottom: 1rem;" controls>
+                                        <source src="{{ post.video.url }}" type="video/mp4">
+                                    </video>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+
+                        <div style="padding: 1rem 1.5rem; background: #f9fafb; border-bottom: 1px solid #e5e7eb; display: flex; gap: 2rem; font-size: 0.9rem;">
+                            <span><i class="fas fa-heart me-1" style="color: #ef4444;"></i><span id="likes-count-{{ post.id }}">{{ post.likes.count }}</span> Likes</span>
+                            <span><i class="fas fa-comment me-1" style="color: #6366f1;"></i>{{ post.comments.count }} Comments</span>
+                            <span><i class="fas fa-share me-1" style="color: #10b981;"></i>{{ post.shares.count }} Shares</span>
+                        </div>
+
+                        <div class="post-actions" style="padding: 1rem 1.5rem; display: flex; gap: 1rem;">
+                            <button class="post-action-btn" id="like-btn-{{ post.id }}" onclick="toggleLike({{ post.id }}, event)" style="flex: 1; border: none; background: transparent; color: #6b7280; cursor: pointer; transition: all 0.3s ease; padding: 0.5rem;">
+                                {% if post.id in liked_post_ids %}
+                                    <i class="fas fa-heart" style="color: #ef4444;"></i>
+                                {% else %}
+                                    <i class="far fa-heart"></i>
+                                {% endif %}
+                                <span class="ms-1">Like</span>
+                            </button>
+
+                            <button type="button" class="post-action-btn" onclick="toggleComments({{ post.id }})" style="flex: 1; border: none; background: transparent; color: #6b7280; cursor: pointer; transition: all 0.3s ease; padding: 0.5rem;">
+                                <i class="fas fa-comment"></i> Comment
+                            </button>
+
+                            <button type="button" class="post-action-btn" onclick="sharePost({{ post.id }}, event)" style="flex: 1; border: none; background: transparent; color: #6b7280; cursor: pointer; transition: all 0.3s ease; padding: 0.5rem;">
+                                <i class="fas fa-share-alt"></i> Share
+                            </button>
+                        </div>
+
+                        <div id="comments-{{ post.id }}" style="display: none; padding: 1.5rem; background: #f9fafb; border-top: 1px solid #e5e7eb;">
+                            {% if post.comments.all %}
+                                <div style="margin-bottom: 1.5rem;">
+                                    {% for comment in post.comments.all %}
+                                        <div style="background: white; padding: 1rem; border-radius: 10px; margin-bottom: 0.75rem; border-left: 3px solid #6366f1;">
+                                            <strong>{{ comment.student.user.username }}</strong>
+                                            <p style="margin: 0.5rem 0 0;">{{ comment.content }}</p>
+                                            <small style="color: #9ca3af;">{{ comment.created_at|date:"M d, H:i" }}</small>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+
+                            <form method="post" action="{% url 'add_comment' post.id %}" onsubmit="submitComment(event, {{ post.id }})">
+                                {% csrf_token %}
+                                <div style="display: flex; gap: 0.75rem;">
+                                    <input type="text" name="content" placeholder="Write a comment..." class="form-control" style="flex: 1; border-radius: 10px; height: 40px;" required>
+                                    <button type="submit" class="btn btn-primary" style="border-radius: 10px;">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div style="text-align: center; padding: 3rem 2rem;">
+                    <i class="fas fa-inbox" style="font-size: 3rem; color: #6b7280; margin-bottom: 1rem; display: block;"></i>
+                    <h3 style="color: #1f2937;">No posts yet</h3>
+                    <a href="{% url 'create_post' %}" class="btn btn-primary mt-3">Create First Post</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="card shadow-lg border-0" style="border-radius: 16px; margin-bottom: 2rem;">
+                <div style="background: linear-gradient(135deg, #6366f1 0%, #10b981 100%); padding: 2rem; text-align: center;">
+                    <h3 style="color: white; margin: 0;">{{ student.club.name }}</h3>
+                </div>
+                <div class="card-body">
+                    <p style="margin: 0; color: #6b7280;">Welcome to {{ student.club.name }}!</p>
+                </div>
+            </div>
+
+            <div class="card shadow-lg border-0" style="border-radius: 16px;">
+                <div style="padding: 1.5rem;">
+                    <h5 style="font-weight: 700; margin-bottom: 1.5rem; color: #1f2937;">Club Stats</h5>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div style="background: linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(99,102,241,0.05) 100%); padding: 1rem; border-radius: 10px; text-align: center;">
+                            <h3 style="color: #6366f1; margin: 0;">{{ club_stats.posts_count }}</h3>
+                            <p style="color: #6b7280; margin: 0.5rem 0 0; font-size: 0.9rem;">Posts</p>
+                        </div>
+                        <div style="background: linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0.05) 100%); padding: 1rem; border-radius: 10px; text-align: center;">
+                            <h3 style="color: #10b981; margin: 0;">{{ club_stats.members_count }}</h3>
+                            <p style="color: #6b7280; margin: 0.5rem 0 0; font-size: 0.9rem;">Members</p>
+                        </div>
+                        <div style="background: linear-gradient(135deg, rgba(245,158,11,0.12) 0%, rgba(245,158,11,0.04) 100%); padding: 1rem; border-radius: 10px; text-align: center;">
+                            <h3 style="color: #f59e0b; margin: 0;">{{ club_stats.events_count }}</h3>
+                            <p style="color: #6b7280; margin: 0.5rem 0 0; font-size: 0.9rem;">Events</p>
+                        </div>
+                        <div style="background: linear-gradient(135deg, rgba(244,63,94,0.12) 0%, rgba(244,63,94,0.04) 100%); padding: 1rem; border-radius: 10px; text-align: center;">
+                            <h3 style="color: #f43f5e; margin: 0;">{{ club_stats.announcements_count }}</h3>
+                            <p style="color: #6b7280; margin: 0.5rem 0 0; font-size: 0.9rem;">Announcements</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleLike(postId, event) {
+    event.preventDefault();
+    
+    fetch(`/posts/${postId}/like/`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        const likeBtn = document.getElementById(`like-btn-${postId}`);
+        const likesCount = document.getElementById(`likes-count-${postId}`);
+        
+        if (data.liked) {
+            likeBtn.innerHTML = '<i class="fas fa-heart" style="color: #ef4444;"></i> <span class="ms-1">Like</span>';
+            likeBtn.style.color = '#ef4444';
+        } else {
+            likeBtn.innerHTML = '<i class="far fa-heart"></i> <span class="ms-1">Like</span>';
+            likeBtn.style.color = '#6b7280';
+        }
+        
+        likesCount.textContent = data.likes_count;
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function deletePost(postId, event) {
+    event.preventDefault();
+    
+    if (!confirm('Are you sure you want to delete this post?')) {
+        return;
+    }
+    
+    fetch(`/posts/${postId}/delete/`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const postCard = document.getElementById(`post-${postId}`);
+            postCard.style.opacity = '0';
+            postCard.style.transform = 'translateY(-10px)';
+            setTimeout(() => {
+                postCard.remove();
+            }, 300);
+        }
+    })
+    .catch(error => {
+        alert('Error deleting post');
+        console.error('Error:', error);
+    });
+}
+
+function toggleComments(postId) {
+    const el = document.getElementById('comments-' + postId);
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function sharePost(postId, event) {
+    event.preventDefault();
+    alert('Share functionality - redirect to share page');
+    window.location.href = `/posts/${postId}/share/`;
+}
+
+function submitComment(event, postId) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    fetch(form.action, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            form.reset();
+            location.reload();
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+document.querySelectorAll('.post-action-btn').forEach(button => {
+    button.addEventListener('mouseover', function() {
+        if (!this.id.startsWith('like-btn')) {
+            this.style.color = '#6366f1';
+            this.style.transform = 'scale(1.05)';
+        }
+    });
+    button.addEventListener('mouseout', function() {
+        if (!this.id.startsWith('like-btn')) {
+            this.style.color = '#6b7280';
+            this.style.transform = 'scale(1)';
+        }
+    });
+});
+</script>
+{% endblock %}
