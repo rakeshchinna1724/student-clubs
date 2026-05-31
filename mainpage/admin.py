@@ -4,8 +4,11 @@ from .models import (
     Announcement,
     BlockedUser,
     Club,
+    College,
+    CollegeAdmin,
     Comment,
     Event,
+    EventRSVP,
     Like,
     Message,
     Notification,
@@ -14,6 +17,21 @@ from .models import (
     Student,
     UserWarning,
 )
+
+
+@admin.register(College)
+class CollegeModelAdmin(admin.ModelAdmin):
+    list_display = ('name', 'email', 'city')
+    search_fields = ('name', 'email', 'admin_name')
+    readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(CollegeAdmin)
+class CollegeAdminModelAdmin(admin.ModelAdmin):
+    list_display = ('user', 'college', 'created_at')
+    list_filter = ('created_at', 'college')
+    search_fields = ('user__username', 'college__name')
+    readonly_fields = ('created_at',)
 
 
 @admin.register(Club)
@@ -30,10 +48,8 @@ class ClubAdmin(admin.ModelAdmin):
 
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
-    list_display = ('name', 'email', 'club', 'department', 'age', 'joined_at')
-    list_filter = ('club', 'department', 'joined_at')
-    search_fields = ('name', 'email', 'user__username', 'club__name')
-    autocomplete_fields = ('club', 'user')
+    list_display = ('name', 'email', 'club')
+    search_fields = ('name', 'email', 'user__username')
     readonly_fields = ('joined_at',)
 
 
@@ -47,9 +63,28 @@ class PostAdmin(admin.ModelAdmin):
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
-    list_display = ('title', 'club', 'event_type', 'event_date', 'created_by')
+    list_display = ('title', 'club', 'event_type', 'event_date', 'created_by', 'has_attachment', 'rsvp_count')
     list_filter = ('club', 'event_type', 'event_date')
     search_fields = ('title', 'description', 'club__name')
+    readonly_fields = ('created_at', 'updated_at')
+
+    def rsvp_count(self, obj):
+        return obj.rsvps.count()
+
+    rsvp_count.short_description = 'RSVPs'
+
+    def has_attachment(self, obj):
+        return bool(obj.attachment)
+
+    has_attachment.boolean = True
+    has_attachment.short_description = 'Attachment'
+
+
+@admin.register(EventRSVP)
+class EventRSVPAdmin(admin.ModelAdmin):
+    list_display = ('event', 'student', 'response', 'updated_at')
+    list_filter = ('response', 'event__club', 'updated_at')
+    search_fields = ('event__title', 'student__name', 'student__email')
     readonly_fields = ('created_at', 'updated_at')
 
 
@@ -71,10 +106,16 @@ class NotificationAdmin(admin.ModelAdmin):
 
 @admin.register(Message)
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ('sender', 'recipient', 'is_read', 'contains_warning', 'created_at')
+    list_display = ('sender', 'recipient', 'is_read', 'contains_warning', 'has_attachment', 'created_at')
     list_filter = ('is_read', 'contains_warning', 'created_at')
     search_fields = ('sender__name', 'recipient__name', 'content')
     readonly_fields = ('created_at',)
+
+    def has_attachment(self, obj):
+        return bool(obj.attachment)
+
+    has_attachment.boolean = True
+    has_attachment.short_description = 'Attachment'
 
 
 @admin.register(UserWarning)

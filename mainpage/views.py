@@ -7,8 +7,8 @@ from django.http import JsonResponse
 from django.db.models import Count, Prefetch, Q
 from django.contrib import messages as django_messages
 
-from .forms import ClubAdminRegistrationForm, PostForm, StyledAuthenticationForm, StudentAccountForm, CommentForm, ShareForm, EventForm, AnnouncementForm, MessageForm, ForgotPasswordForm, PasswordResetOTPForm, PasswordResetForm
-from .models import Club, Post, Student, Like, Comment, Share, Event, Announcement, Notification, Message, UserWarning, BlockedUser
+from .forms import AdminPasswordEditForm, ClubAdminRegistrationForm, PostForm, StyledAuthenticationForm, StudentAccountForm, CommentForm, ShareForm, EventForm, AnnouncementForm, MessageForm, ForgotPasswordForm, PasswordResetOTPForm, PasswordResetForm, CollegeRegistrationForm, CollegeLoginForm
+from .models import Club, Post, Student, Like, Comment, Share, Event, EventRSVP, Announcement, Notification, Message, UserWarning, BlockedUser, College, CollegeAdmin
 from .utils import contains_bad_words, add_warning, should_block_user, can_message
 from .password_utils import create_password_reset_request, send_password_reset_email, verify_otp_and_get_reset_request, reset_user_password
 
@@ -25,38 +25,97 @@ def build_live_stats():
 
 
 def index(request):
-    """Landing page for unauthenticated users"""
+    """Landing page - shows college registration/login if unauthenticated, college dashboard if authenticated"""
     if request.user.is_authenticated:
         return role_redirect(request.user)
-    stats = build_live_stats()
-    return render(request, 'mainpage/index.html', {'stats': stats})
+    
+    # Show ONLY college registration/login for unauthenticated users
+    context = {
+        'is_college_authenticated': False,
+    }
+    return render(request, 'mainpage/index.html', context)
+
+
+def public_colleges(request):
+    """Public page listing colleges with live club and student counts."""
+    colleges = College.objects.annotate(
+        club_count=Count('clubs', distinct=True),
+        student_count=Count('clubs__students', distinct=True),
+    ).order_by('name')
+
+    return render(request, 'mainpage/public_colleges.html', {
+        'colleges': colleges,
+        'stats': {
+            'colleges_count': colleges.count(),
+            'clubs_count': Club.objects.count(),
+            'students_count': Student.objects.count(),
+        },
+    })
+
+
+def public_college_detail(request, college_id):
+    """Public page showing clubs and members for one college."""
+    college = get_object_or_404(
+        College.objects.annotate(
+            club_count=Count('clubs', distinct=True),
+            student_count=Count('clubs__students', distinct=True),
+        ),
+        id=college_id,
+    )
+    clubs = college.clubs.select_related('admin').prefetch_related(
+        Prefetch('students', queryset=Student.objects.select_related('user').order_by('name'))
+    ).annotate(
+        member_count=Count('students', distinct=True),
+        post_count=Count('posts', distinct=True),
+        event_count=Count('events', distinct=True),
+    ).order_by('name')
+
+    return render(request, 'mainpage/public_college_detail.html', {
+        'college': college,
+        'clubs': clubs,
+    })
 
 
 def role_redirect(user):
+    if hasattr(user, 'college_admin'):
+        return redirect('college_dashboard')
     if hasattr(user, 'managed_club'):
         return redirect('club_dashboard')
     if hasattr(user, 'student_profile'):
         return redirect('student_home')
-    return redirect('admin_login')
+    return redirect('college_login')
 
 
 def admin_signup(request):
-    if request.user.is_authenticated:
+    college = None
+    creating_for_college = request.user.is_authenticated and hasattr(request.user, 'college_admin')
+    if creating_for_college:
+        college = request.user.college_admin.college
+    elif request.user.is_authenticated:
         return role_redirect(request.user)
+    else:
+        return redirect('college_login')
 
     if request.method == 'POST':
-        form = ClubAdminRegistrationForm(request.POST)
+        form = ClubAdminRegistrationForm(request.POST, college=college)
         if form.is_valid():
             user = form.save(commit=False)
             user.email = form.cleaned_data['email']
             user.save()
-            Club.objects.create(name=form.cleaned_data['club_name'], admin=user)
+            Club.objects.create(name=form.cleaned_data['club_name'], admin=user, college=college)
+            if creating_for_college:
+                django_messages.success(request, f"{form.cleaned_data['club_name']} club created successfully.")
+                return redirect('college_dashboard')
             login(request, user)
             return redirect('club_dashboard')
     else:
-        form = ClubAdminRegistrationForm()
+        form = ClubAdminRegistrationForm(college=college)
 
-    return render(request, 'mainpage/admin_signup.html', {'form': form})
+    return render(request, 'mainpage/admin_signup.html', {
+        'form': form,
+        'creating_for_college': creating_for_college,
+        'college': college,
+    })
 
 
 def admin_login(request):
@@ -75,6 +134,110 @@ def admin_login(request):
         form = StyledAuthenticationForm()
 
     return render(request, 'mainpage/admin_login.html', {'form': form})
+
+
+def college_register(request):
+    """College registration page"""
+    if request.user.is_authenticated:
+        return role_redirect(request.user)
+
+    if request.method == 'POST':
+        form = CollegeRegistrationForm(request.POST)
+        if form.is_valid():
+            # Create user
+            user = form.save(commit=False)
+            user.save()
+            
+            # Create college
+            college = College.objects.create(
+                name=form.cleaned_data['college_name'],
+                email=form.cleaned_data['college_email'],
+                admin_name=form.cleaned_data['admin_name'],
+                phone=form.cleaned_data['phone'],
+                address=form.cleaned_data['address'],
+                city=form.cleaned_data['city'],
+                state=form.cleaned_data['state'],
+                pincode=form.cleaned_data['pincode'],
+                registration_number=form.cleaned_data['registration_number'],
+            )
+            
+            # Create college admin
+            CollegeAdmin.objects.create(user=user, college=college)
+            
+            login(request, user)
+            django_messages.success(request, 'College registered successfully! Welcome to the platform.')
+            return redirect('college_dashboard')
+    else:
+        form = CollegeRegistrationForm()
+
+    return render(request, 'mainpage/college_register.html', {'form': form})
+
+
+def college_login(request):
+    """College login page"""
+    if request.user.is_authenticated:
+        return role_redirect(request.user)
+
+    if request.method == 'POST':
+        form = CollegeLoginForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            if hasattr(user, 'college_admin'):
+                login(request, user)
+                django_messages.success(request, f'Welcome back to {user.college_admin.college.name}!')
+                return redirect('college_dashboard')
+            form.add_error(None, 'This account is not a college admin account.')
+    else:
+        form = CollegeLoginForm()
+
+    return render(request, 'mainpage/college_login.html', {'form': form})
+
+
+@login_required(login_url='college_login')
+def college_dashboard(request):
+    """College admin dashboard"""
+    if not hasattr(request.user, 'college_admin'):
+        return redirect('college_login')
+    
+    college = request.user.college_admin.college
+    clubs = college.clubs.all().annotate(
+        member_count=Count('students', distinct=True),
+        post_count=Count('posts', distinct=True),
+        event_count=Count('events', distinct=True),
+    )
+    
+    stats = {
+        'total_clubs': clubs.count(),
+        'total_students': Student.objects.filter(club__college=college).count(),
+        'total_posts': Post.objects.filter(club__college=college).count(),
+        'total_events': Event.objects.filter(club__college=college).count(),
+        'total_announcements': Announcement.objects.filter(club__college=college).count(),
+    }
+    
+    return render(request, 'mainpage/college_dashboard.html', {
+        'college': college,
+        'clubs': clubs,
+        'stats': stats,
+    })
+
+
+@login_required(login_url='college_login')
+def college_clubs(request):
+    """View all clubs in the college"""
+    if not hasattr(request.user, 'college_admin'):
+        return redirect('college_login')
+    
+    college = request.user.college_admin.college
+    clubs = college.clubs.all().annotate(
+        member_count=Count('students', distinct=True),
+        post_count=Count('posts', distinct=True),
+        event_count=Count('events', distinct=True),
+    )
+    
+    return render(request, 'mainpage/college_clubs.html', {
+        'college': college,
+        'clubs': clubs,
+    })
 
 
 def student_login(request):
@@ -109,6 +272,7 @@ def student_signup(request):
             )
             student = form.save(commit=False)
             student.user = user
+            student.college = form.cleaned_data['college']
             student.club = form.cleaned_data['club']
             student.save()
             login(request, user)
@@ -133,6 +297,10 @@ def club_dashboard(request):
     }
     recent_members = students[:6]
     recent_posts = posts[:5]
+    recent_events = list(club.events.prefetch_related('rsvps').order_by('-event_date')[:5])
+    for event in recent_events:
+        event.yes_count = event.rsvps.filter(response=EventRSVP.RESPONSE_YES).count()
+        event.no_count = event.rsvps.filter(response=EventRSVP.RESPONSE_NO).count()
     return render(request, 'mainpage/club_dashboard.html', {
         'club': club,
         'students': students,
@@ -140,6 +308,7 @@ def club_dashboard(request):
         'dashboard_stats': dashboard_stats,
         'recent_members': recent_members,
         'recent_posts': recent_posts,
+        'recent_events': recent_events,
     })
 
 
@@ -351,7 +520,7 @@ def create_event(request):
     club = get_object_or_404(Club, admin=request.user)
     
     if request.method == 'POST':
-        form = EventForm(request.POST)
+        form = EventForm(request.POST, request.FILES)
         if form.is_valid():
             event = form.save(commit=False)
             event.club = club
@@ -373,7 +542,41 @@ def create_event(request):
     else:
         form = EventForm()
     
-    return render(request, 'mainpage/create_event.html', {'form': form, 'club': club})
+    return render(request, 'mainpage/create_event.html', {'form': form, 'club': club, 'is_edit': False})
+
+
+@login_required(login_url='admin_login')
+def update_event(request, event_id):
+    """Admin updates an event for their club"""
+    club = get_object_or_404(Club, admin=request.user)
+    event = get_object_or_404(Event, id=event_id, club=club)
+
+    if request.method == 'POST':
+        form = EventForm(request.POST, request.FILES, instance=event)
+        if form.is_valid():
+            form.save()
+            django_messages.success(request, 'Event updated successfully.')
+            return redirect('club_dashboard')
+    else:
+        form = EventForm(instance=event)
+
+    return render(request, 'mainpage/create_event.html', {
+        'form': form,
+        'club': club,
+        'event': event,
+        'is_edit': True,
+    })
+
+
+@login_required(login_url='admin_login')
+@require_POST
+def delete_event(request, event_id):
+    """Admin deletes an event for their club"""
+    club = get_object_or_404(Club, admin=request.user)
+    event = get_object_or_404(Event, id=event_id, club=club)
+    event.delete()
+    django_messages.success(request, 'Event deleted successfully.')
+    return redirect('club_dashboard')
 
 
 @login_required(login_url='admin_login')
@@ -448,15 +651,50 @@ def view_events(request):
     """View upcoming events"""
     try:
         student = Student.objects.get(user=request.user)
-        events = student.club.events.all() if student.club else []
+        events = list(student.club.events.select_related('created_by').prefetch_related('rsvps').all()) if student.club else []
     except Student.DoesNotExist:
         django_messages.error(request, "You must have a student profile to view events.")
         return redirect('student_home')
+
+    rsvps = EventRSVP.objects.filter(student=student, event__in=events)
+    rsvp_by_event_id = {rsvp.event_id: rsvp.response for rsvp in rsvps}
+    for event in events:
+        event.current_rsvp = rsvp_by_event_id.get(event.id)
+        event.yes_count = event.rsvps.filter(response=EventRSVP.RESPONSE_YES).count()
+        event.no_count = event.rsvps.filter(response=EventRSVP.RESPONSE_NO).count()
     
     return render(request, 'mainpage/view_events.html', {
         'student': student,
         'events': events
     })
+
+
+@login_required(login_url='student_login')
+@require_POST
+def rsvp_event(request, event_id):
+    """Student RSVP for an event in their club"""
+    try:
+        student = Student.objects.get(user=request.user)
+    except Student.DoesNotExist:
+        django_messages.error(request, "You must have a student profile to RSVP for events.")
+        return redirect('student_home')
+
+    event = get_object_or_404(Event, id=event_id)
+    if event.club_id != student.club_id:
+        django_messages.error(request, 'You can only RSVP for events in your club.')
+        return redirect('view_events')
+    response = request.POST.get('response')
+    if response not in {EventRSVP.RESPONSE_YES, EventRSVP.RESPONSE_NO}:
+        django_messages.error(request, 'Please choose Yes or No for your RSVP.')
+        return redirect('view_events')
+
+    EventRSVP.objects.update_or_create(
+        event=event,
+        student=student,
+        defaults={'response': response},
+    )
+    django_messages.success(request, f'Your RSVP for {event.title} was saved.')
+    return redirect('view_events')
 
 
 @login_required(login_url='student_login')
@@ -478,7 +716,6 @@ def view_announcements(request):
 def account_logout(request):
     """Logout user and redirect to home page"""
     logout(request)
-    django_messages.success(request, 'You have been successfully logged out.')
     return redirect('home')
 
 
@@ -557,13 +794,14 @@ def message_thread(request, recipient_id):
     messages_list.filter(recipient=sender, is_read=False).update(is_read=True)
     
     if request.method == 'POST':
-        form = MessageForm(request.POST)
+        form = MessageForm(request.POST, request.FILES)
         if form.is_valid():
             # Check for bad words
-            content = form.cleaned_data['content']
+            content = form.cleaned_data['content'].strip()
             has_bad_words = contains_bad_words(content)
             
             message = form.save(commit=False)
+            message.content = content
             message.sender = sender
             message.recipient = recipient
             message.contains_warning = has_bad_words
@@ -621,19 +859,28 @@ def send_message(request, recipient_id):
     if is_blocked:
         return JsonResponse({'error': 'Cannot message this user'}, status=403)
     
-    content = request.POST.get('content', '').strip()
-    if not content:
-        return JsonResponse({'error': 'Message cannot be empty'}, status=400)
+    form = MessageForm(request.POST, request.FILES)
+    if not form.is_valid():
+        return JsonResponse({'error': form.errors.as_text()}, status=400)
+
+    content = form.cleaned_data['content'].strip()
     
     # Check for bad words
     has_bad_words = contains_bad_words(content)
     
-    message = Message.objects.create(
-        sender=sender,
-        recipient=recipient,
-        content=content,
-        contains_warning=has_bad_words
-    )
+    message = form.save(commit=False)
+    message.content = content
+    message.sender = sender
+    message.recipient = recipient
+    message.contains_warning = has_bad_words
+    message.save()
+
+    response_payload = {
+        'success': True,
+        'message_id': message.id,
+        'attachment_url': message.attachment.url if message.attachment else '',
+        'attachment_name': message.attachment_name,
+    }
     
     if has_bad_words:
         # Add warning to sender
@@ -649,10 +896,12 @@ def send_message(request, recipient_id):
         else:
             return JsonResponse({
                 'warning': f'Your message contained inappropriate content. Warning {warning_count}/2.',
-                'message_id': message.id
+                'message_id': message.id,
+                'attachment_url': response_payload['attachment_url'],
+                'attachment_name': response_payload['attachment_name'],
             }, status=201)
     
-    return JsonResponse({'success': True, 'message_id': message.id}, status=201)
+    return JsonResponse(response_payload, status=201)
 
 
 @login_required(login_url='student_login')
@@ -660,6 +909,8 @@ def get_available_users(request):
     """Get list of users available to message (same club + not blocked)"""
     # Get student profile safely
     if not hasattr(request.user, 'student_profile') or request.user.student_profile is None:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'users': []})
         return JsonResponse({'error': 'Only students can access this'}, status=403)
     
     student = request.user.student_profile
@@ -680,7 +931,7 @@ def get_available_users(request):
     available_users = available_users.exclude(id__in=blocked_ids_set)
     
     data = [{'id': user.id, 'name': user.name} for user in available_users]
-    return JsonResponse(data, safe=False)
+    return JsonResponse({'users': data})
 
 
 # ==================== PASSWORD RESET VIEWS ====================
@@ -826,9 +1077,12 @@ def password_reset_confirm(request, token, step='otp'):
         return render(request, 'mainpage/password_reset_confirm.html', {'form': form, 'step': 'password'})
 
 
+
+@login_required(login_url='admin_login')
 def admin_edit_student_password(request, student_id):
     """Allow admin to edit student password"""
     if not hasattr(request.user, 'managed_club'):
+        django_messages.error(request, 'Only club admins can edit student passwords.')
         return redirect('admin_login')
     
     club = request.user.managed_club
@@ -838,18 +1092,16 @@ def admin_edit_student_password(request, student_id):
         django_messages.error(request, 'Student not found.')
         return redirect('club_dashboard')
     
+    form = AdminPasswordEditForm(request.POST or None, user=student.user)
     if request.method == 'POST':
-        new_password = request.POST.get('new_password', '').strip()
-        if new_password:
-            student.user.set_password(new_password)
+        if form.is_valid():
+            student.user.set_password(form.cleaned_data['new_password'])
             student.user.save()
             django_messages.success(request, f'Password for {student.name} has been updated.')
             return redirect('club_dashboard')
-        else:
-            django_messages.error(request, 'Password cannot be empty.')
+        django_messages.error(request, 'Please choose a stronger password.')
     
-    return render(request, 'mainpage/admin_edit_student_password.html', {'student': student})
-    return JsonResponse({'users': data})
+    return render(request, 'mainpage/admin_edit_student_password.html', {'student': student, 'form': form})
 
 
 @login_required(login_url='student_login')

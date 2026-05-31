@@ -12,6 +12,29 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 
+# Workaround for Django 4.2 + Python 3.14 compatibility issue
+import sys
+if sys.version_info >= (3, 14):
+    try:
+        from django.template.context import Context
+        # Patch the __copy__ method to fix the 'dicts' AttributeError
+        if not hasattr(Context, '_original_copy'):
+            Context._original_copy = Context.__copy__
+            
+            def patched_copy(self):
+                try:
+                    return self._original_copy()
+                except AttributeError as e:
+                    if "'super' object has no attribute 'dicts'" in str(e):
+                        # Fallback: return a shallow copy of the context dict
+                        new_context = Context(dict(self.flatten()))
+                        return new_context
+                    raise
+            
+            Context.__copy__ = patched_copy
+    except Exception:
+        pass
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -48,8 +71,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'mainpage.middleware.NoCacheMiddleware',
-    'mainpage.middleware.SecurityHeadersMiddleware',
 ]
 
 ROOT_URLCONF = 'studentclub.urls'

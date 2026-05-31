@@ -1,12 +1,68 @@
 // Student Club - Main JavaScript
 
 document.addEventListener('DOMContentLoaded', function() {
+    initializePageLoader();
     // Initialize animations
     initializeAnimations();
     initializeFormValidation();
     initializeInteractiveElements();
     updateNotificationCount();
 });
+
+/**
+ * Show a short loading overlay during page navigation.
+ */
+function initializePageLoader() {
+    const loader = document.getElementById('pageLoader');
+    if (!loader) {
+        return;
+    }
+
+    const showLoader = () => {
+        loader.classList.add('is-active');
+        loader.setAttribute('aria-hidden', 'false');
+    };
+
+    const hideLoader = () => {
+        loader.classList.remove('is-active');
+        loader.setAttribute('aria-hidden', 'true');
+    };
+
+    window.addEventListener('load', hideLoader);
+    window.addEventListener('pageshow', hideLoader);
+    window.addEventListener('beforeunload', showLoader);
+
+    document.querySelectorAll('a[href]').forEach(link => {
+        link.addEventListener('click', function(event) {
+            const href = this.getAttribute('href');
+            if (
+                event.defaultPrevented ||
+                event.metaKey ||
+                event.ctrlKey ||
+                event.shiftKey ||
+                event.altKey ||
+                this.target === '_blank' ||
+                this.hasAttribute('download') ||
+                !href ||
+                href.startsWith('#') ||
+                href.startsWith('mailto:') ||
+                href.startsWith('tel:') ||
+                href.startsWith('javascript:')
+            ) {
+                return;
+            }
+            showLoader();
+        });
+    });
+
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function() {
+            if (form.checkValidity()) {
+                showLoader();
+            }
+        });
+    });
+}
 
 /**
  * Initialize animations and transitions
@@ -81,7 +137,11 @@ function initializeInteractiveElements() {
  * Update notification count
  */
 function updateNotificationCount() {
-    // This can be called via AJAX to get unread notification count
+    // Messaging notifications are only available for student accounts.
+    if (document.body.dataset.userRole !== 'student') {
+        return;
+    }
+
     fetch('/messages/available-users/', {
         method: 'GET',
         headers: {

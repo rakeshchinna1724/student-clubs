@@ -1,0 +1,505 @@
+{% extends 'mainpage/base.html' %}
+{% load static %}
+
+{% block title %}College Dashboard - Student Club{% endblock %}
+
+{% block extra_css %}
+<style>
+    .college-dashboard {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 30px 20px;
+    }
+
+    .dashboard-header {
+        max-width: 1200px;
+        margin: 0 auto 40px;
+        animation: slideDown 0.6s ease-out;
+    }
+
+    .header-content {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-content h1 {
+        color: #333;
+        font-size: 36px;
+        margin-bottom: 10px;
+        animation: fadeIn 0.8s ease-out 0.2s both;
+    }
+
+    .header-content p {
+        color: #666;
+        font-size: 16px;
+        animation: fadeIn 0.8s ease-out 0.3s both;
+    }
+
+    .college-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+        animation: fadeIn 0.8s ease-out 0.4s both;
+    }
+
+    .portal-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 24px;
+        animation: fadeIn 0.8s ease-out 0.5s both;
+    }
+
+    .portal-actions a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 18px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.25s ease;
+    }
+
+    .portal-actions__primary {
+        background: #667eea;
+        color: white;
+    }
+
+    .portal-actions__secondary {
+        background: #f1f5f9;
+        color: #334155;
+        border: 1px solid #dbe4f0;
+    }
+
+    .portal-actions a:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(31, 41, 55, 0.16);
+    }
+
+    .info-item {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 10px;
+        border-left: 4px solid #667eea;
+    }
+
+    .info-item label {
+        display: block;
+        font-size: 12px;
+        color: #999;
+        margin-bottom: 5px;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+
+    .info-item span {
+        display: block;
+        font-size: 16px;
+        color: #333;
+        font-weight: 600;
+    }
+
+    .stats-container {
+        max-width: 1200px;
+        margin: 0 auto 40px;
+        animation: fadeIn 0.8s ease-out 0.5s both;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 20px;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        transition: all 0.3s ease;
+        animation: scaleUp 0.6s ease-out both;
+    }
+
+    .stat-card:nth-child(1) { animation-delay: 0.6s; }
+    .stat-card:nth-child(2) { animation-delay: 0.7s; }
+    .stat-card:nth-child(3) { animation-delay: 0.8s; }
+    .stat-card:nth-child(4) { animation-delay: 0.9s; }
+    .stat-card:nth-child(5) { animation-delay: 1s; }
+
+    .stat-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+    }
+
+    .stat-icon {
+        font-size: 40px;
+        margin-bottom: 15px;
+        display: block;
+    }
+
+    .stat-label {
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        font-weight: bold;
+        letter-spacing: 1px;
+    }
+
+    .stat-number {
+        color: #667eea;
+        font-size: 32px;
+        font-weight: bold;
+    }
+
+    .content-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        animation: fadeIn 0.8s ease-out 1.1s both;
+    }
+
+    .section-title {
+        color: white;
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .clubs-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+    }
+
+    .club-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        animation: slideUp 0.6s ease-out both;
+    }
+
+    .club-card:nth-child(1) { animation-delay: 1.2s; }
+    .club-card:nth-child(2) { animation-delay: 1.3s; }
+    .club-card:nth-child(3) { animation-delay: 1.4s; }
+    .club-card:nth-child(n+4) { animation-delay: 1.5s; }
+
+    .club-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .club-name {
+        font-size: 20px;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 15px;
+        border-bottom: 2px solid #667eea;
+        padding-bottom: 10px;
+    }
+
+    .club-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .club-stat {
+        text-align: center;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .club-stat-label {
+        font-size: 12px;
+        color: #999;
+        text-transform: uppercase;
+    }
+
+    .club-stat-value {
+        font-size: 18px;
+        font-weight: bold;
+        color: #667eea;
+    }
+
+    .club-admin {
+        font-size: 13px;
+        color: #666;
+        margin-bottom: 15px;
+    }
+
+    .club-admin strong {
+        color: #333;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn {
+        flex: 1;
+        padding: 10px;
+        border: none;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        text-align: center;
+    }
+
+    .btn-primary {
+        background: #667eea;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #764ba2;
+        transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+        background: #e0e0e0;
+        color: #333;
+    }
+
+    .btn-secondary:hover {
+        background: #d0d0d0;
+        transform: translateY(-2px);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: white;
+    }
+
+    .empty-state-icon {
+        font-size: 60px;
+        margin-bottom: 20px;
+    }
+
+    .empty-state h3 {
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
+
+    .empty-state p {
+        font-size: 16px;
+        margin-bottom: 30px;
+        opacity: 0.9;
+    }
+
+    .empty-state .btn-primary {
+        display: inline-block;
+        padding: 12px 30px;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+
+    @keyframes scaleUp {
+        from {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .college-dashboard {
+            padding: 20px 15px;
+        }
+
+        .header-content {
+            padding: 30px 20px;
+        }
+
+        .header-content h1 {
+            font-size: 28px;
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .clubs-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .college-info {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="college-dashboard">
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div class="header-content">
+            <h1 style="color: #667eea; font-size: 42px; margin-bottom: 5px;">🎓 {{ college.name }}</h1>
+            <p style="color: #999; font-size: 16px; margin-bottom: 20px;">College Management Dashboard</p>
+            <p style="color: #666; font-size: 15px;">Welcome, <strong>{{ college.admin_name }}</strong>! Manage your college clubs and club admin accounts</p>
+
+            <div class="college-info">
+                <div class="info-item">
+                    <label>Email</label>
+                    <span>{{ college.email }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Location</label>
+                    <span>{{ college.city }}, {{ college.state }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Registration No.</label>
+                    <span>{{ college.registration_number }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Phone</label>
+                    <span>{{ college.phone }}</span>
+                </div>
+            </div>
+
+            <div class="portal-actions">
+                <a href="{% url 'admin_signup' %}" class="portal-actions__primary">
+                    <i class="fas fa-plus-circle"></i>Create Club
+                </a>
+                <a href="{% url 'college_clubs' %}" class="portal-actions__secondary">
+                    <i class="fas fa-list"></i>View Clubs
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="stats-container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-icon">🏫</span>
+                <div class="stat-label">Total Clubs</div>
+                <div class="stat-number">{{ stats.total_clubs }}</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon">👥</span>
+                <div class="stat-label">Total Students</div>
+                <div class="stat-number">{{ stats.total_students }}</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon">📝</span>
+                <div class="stat-label">Total Posts</div>
+                <div class="stat-number">{{ stats.total_posts }}</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon">📅</span>
+                <div class="stat-label">Total Events</div>
+                <div class="stat-number">{{ stats.total_events }}</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon">📢</span>
+                <div class="stat-label">Announcements</div>
+                <div class="stat-number">{{ stats.total_announcements }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clubs Section -->
+    <div class="content-container">
+        <h2 class="section-title">🎓 Your Clubs</h2>
+
+        {% if clubs %}
+            <div class="clubs-grid">
+                {% for club in clubs %}
+                    <div class="club-card">
+                        <div class="club-name">{{ club.name }}</div>
+                        
+                        <div class="club-stats">
+                            <div class="club-stat">
+                                <div class="club-stat-label">Members</div>
+                                <div class="club-stat-value">{{ club.member_count }}</div>
+                            </div>
+                            <div class="club-stat">
+                                <div class="club-stat-label">Posts</div>
+                                <div class="club-stat-value">{{ club.post_count }}</div>
+                            </div>
+                            <div class="club-stat">
+                                <div class="club-stat-label">Events</div>
+                                <div class="club-stat-value">{{ club.event_count }}</div>
+                            </div>
+                        </div>
+
+                        <div class="club-admin">
+                            <strong>Admin:</strong> {{ club.admin.username }}
+                        </div>
+
+                        <div class="action-buttons">
+                            <a href="{% url 'college_clubs' %}" class="btn btn-primary">View Details</a>
+                            <button class="btn btn-secondary">Edit</button>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <h3>No Clubs Yet</h3>
+                <p>Create your first club to get started</p>
+                <a href="{% url 'admin_signup' %}" class="btn btn-primary">Create a Club</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+</style>
+{% endblock %}

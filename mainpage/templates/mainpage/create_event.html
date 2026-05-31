@@ -1,20 +1,20 @@
 {% extends 'mainpage/base.html' %}
 
-{% block title %}Create Event | Student Club{% endblock %}
+{% block title %}{% if is_edit %}Update Event{% else %}Create Event{% endif %} | Student Club{% endblock %}
 
 {% block content %}
     <section class="page-head">
         <div>
-            <p class="eyebrow">Create Event</p>
-            <h1>Post a New Event</h1>
-            <p class="lead">Notify all students in {{ club.name }} about an upcoming event</p>
+            <p class="eyebrow">{% if is_edit %}Update Event{% else %}Create Event{% endif %}</p>
+            <h1>{% if is_edit %}Edit Event Details{% else %}Post a New Event{% endif %}</h1>
+            <p class="lead">{% if is_edit %}Keep {{ club.name }} members up to date{% else %}Notify all students in {{ club.name }} about an upcoming event{% endif %}</p>
         </div>
     </section>
 
     <div class="content-grid">
     <section>
         <div class="form-card">
-            <form method="POST" class="form">
+            <form method="POST" enctype="multipart/form-data" class="form">
                 {% csrf_token %}
                 <fieldset>
                     <legend>Event Details</legend>
@@ -54,16 +54,31 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="id_location">Location (Optional)</label>
+                        <label for="id_location">Location</label>
                         {{ form.location }}
                         {% if form.location.errors %}
                             <span class="error">{{ form.location.errors.0 }}</span>
                         {% endif %}
                     </div>
+
+                    <div class="form-group">
+                        <label for="id_attachment">Attachment</label>
+                        {{ form.attachment }}
+                        <small class="help-text">Optional PDF, document, spreadsheet, image, text, or zip file up to 10 MB.</small>
+                        {% if is_edit and event.attachment %}
+                            <small class="help-text">
+                                Current file:
+                                <a href="{{ event.attachment.url }}" download>{{ event.attachment_name }}</a>
+                            </small>
+                        {% endif %}
+                        {% if form.attachment.errors %}
+                            <span class="error">{{ form.attachment.errors.0 }}</span>
+                        {% endif %}
+                    </div>
                 </fieldset>
 
                 <div class="form-actions">
-                    <button type="submit" class="btn">Create Event & Notify</button>
+                    <button type="submit" class="btn">{% if is_edit %}Update Event{% else %}Create Event & Notify{% endif %}</button>
                     <a href="{% url 'club_dashboard' %}" class="btn btn-outline">Cancel</a>
                 </div>
             </form>
@@ -119,6 +134,7 @@
 
         input[type="text"],
         input[type="datetime-local"],
+        input[type="file"],
         select,
         textarea {
             padding: 0.75rem;
@@ -144,6 +160,11 @@
 
         .error {
             color: #d32f2f;
+            font-size: 0.85rem;
+        }
+
+        .help-text {
+            color: #666;
             font-size: 0.85rem;
         }
 

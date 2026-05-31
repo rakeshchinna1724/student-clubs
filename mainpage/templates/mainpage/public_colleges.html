@@ -1,0 +1,59 @@
+{% extends 'mainpage/base.html' %}
+
+{% block title %}Colleges | Student Club{% endblock %}
+
+{% block content %}
+<section style="background: #f8fafc; min-height: 100vh; padding: 48px 20px;">
+    <div style="max-width: 1120px; margin: 0 auto;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap; margin-bottom: 28px;">
+            <div>
+                <a href="{% url 'home' %}" style="color: #4f46e5; font-weight: 700; text-decoration: none;">
+                    <i class="fas fa-arrow-left me-2"></i>Home
+                </a>
+                <h1 style="font-size: 36px; color: #0f172a; margin: 16px 0 8px;">Available Colleges</h1>
+                <p style="color: #475569; margin: 0;">Live college data with clubs and registered student counts.</p>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px;">
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px;">
+                <span style="display: block; color: #64748b; font-size: 13px; font-weight: 700;">Colleges</span>
+                <strong style="display: block; color: #4f46e5; font-size: 28px;">{{ stats.colleges_count }}</strong>
+            </div>
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px;">
+                <span style="display: block; color: #64748b; font-size: 13px; font-weight: 700;">Clubs</span>
+                <strong style="display: block; color: #0f766e; font-size: 28px;">{{ stats.clubs_count }}</strong>
+            </div>
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px;">
+                <span style="display: block; color: #64748b; font-size: 13px; font-weight: 700;">Students</span>
+                <strong style="display: block; color: #ea580c; font-size: 28px;">{{ stats.students_count }}</strong>
+            </div>
+        </div>
+
+        {% if colleges %}
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px;">
+                {% for college in colleges %}
+                    <a href="{% url 'public_college_detail' college.id %}" style="display: block; background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 22px; text-decoration: none; color: inherit; box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);">
+                        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
+                            <div>
+                                <h2 style="font-size: 20px; color: #0f172a; margin: 0 0 8px;">{{ college.name }}</h2>
+                                <p style="color: #64748b; margin: 0;">{{ college.city }}, {{ college.state }}</p>
+                            </div>
+                            <i class="fas fa-chevron-right" style="color: #94a3b8;"></i>
+                        </div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px;">
+                            <span style="background: #eef2ff; color: #4338ca; border-radius: 999px; padding: 7px 11px; font-size: 13px; font-weight: 700;">{{ college.club_count }} club{{ college.club_count|pluralize }}</span>
+                            <span style="background: #ecfdf5; color: #047857; border-radius: 999px; padding: 7px 11px; font-size: 13px; font-weight: 700;">{{ college.student_count }} student{{ college.student_count|pluralize }}</span>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 32px; text-align: center;">
+                <h2 style="color: #0f172a; margin: 0 0 8px;">No colleges registered yet</h2>
+                <p style="color: #64748b; margin: 0;">Registered colleges will appear here automatically.</p>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

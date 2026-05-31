@@ -61,6 +61,16 @@
                                     </div>
                                 </div>
                             {% endif %}
+
+                            {% if event.attachment %}
+                                <div class="detail-item" style="padding: 1rem 0; border-top: 1px solid rgba(99,102,241,0.1); display: flex; gap: 12px; align-items: flex-start;">
+                                    <span class="detail-icon" style="font-size: 20px; flex-shrink: 0;">File</span>
+                                    <div class="detail-text">
+                                        <strong style="color: #0f172a; font-size: 14px; display: block; margin-bottom: 4px;">Attachment</strong>
+                                        <a href="{{ event.attachment.url }}" download style="color: #2563eb; font-size: 14px; font-weight: 600; text-decoration: none;">{{ event.attachment_name }}</a>
+                                    </div>
+                                </div>
+                            {% endif %}
                             
                             <div class="detail-item" style="padding: 1rem 0; border-top: 1px solid rgba(99,102,241,0.1); display: flex; gap: 12px; align-items: flex-start;">
                                 <span class="detail-icon" style="font-size: 20px; flex-shrink: 0;">👤</span>
@@ -71,6 +81,22 @@
                             </div>
                         </div>
                         
+                        <div class="event-rsvp" style="padding: 1rem 1.5rem; border-top: 1px solid rgba(99,102,241,0.1);">
+                            <div style="display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 12px;">
+                                <strong style="color: #0f172a; font-size: 14px;">Your RSVP</strong>
+                                <span style="color: #334155; font-size: 13px;">Yes {{ event.yes_count }} | No {{ event.no_count }}</span>
+                            </div>
+                            <form method="post" action="{% url 'rsvp_event' event.id %}" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                {% csrf_token %}
+                                <button type="submit" name="response" value="yes" class="btn {% if event.current_rsvp == 'yes' %}btn-rsvp-active{% else %}btn-rsvp{% endif %}">
+                                    Yes
+                                </button>
+                                <button type="submit" name="response" value="no" class="btn {% if event.current_rsvp == 'no' %}btn-rsvp-active{% else %}btn-rsvp{% endif %}">
+                                    No
+                                </button>
+                            </form>
+                        </div>
+
                         <div class="event-meta" style="padding: 1rem 1.5rem; background: #f8fafc; border-top: 1px solid rgba(99,102,241,0.1);">
                             <small style="color: #334155; font-weight: 500;">Posted on {{ event.created_at|date:"M d, Y" }}</small>
                         </div>
@@ -237,6 +263,19 @@
 
         .btn:hover {
             background: #45a049;
+        }
+
+        .btn-rsvp {
+            background: white;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+        }
+
+        .btn-rsvp:hover,
+        .btn-rsvp-active {
+            background: #2563eb;
+            color: white;
+            border: 1px solid #2563eb;
         }
     </style>
 {% endblock %}

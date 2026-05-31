@@ -321,5 +321,71 @@ function updateDateTime() {
 }
 updateDateTime();
 setInterval(updateDateTime, 1000);
+
+// Dynamic Club Filter Based on College Selection
+document.addEventListener('DOMContentLoaded', function() {
+    const collegeSelect = document.getElementById('id_college');
+    const clubSelect = document.getElementById('id_club');
+    
+    if (!collegeSelect || !clubSelect) {
+        console.warn('College or club select not found');
+        return;
+    }
+    
+    // Clear initial club options - no clubs shown until college is selected
+    clubSelect.innerHTML = '<option value="">Select your club</option>';
+    
+    collegeSelect.addEventListener('change', function() {
+        const selectedCollegeId = this.value;
+        
+        // Clear current options except the empty label
+        clubSelect.innerHTML = '<option value="">Select your club</option>';
+        
+        if (!selectedCollegeId) {
+            // If college is deselected, clear clubs again
+            return;
+        }
+        
+        // Fetch clubs for selected college via AJAX
+        fetch(`/api/college-clubs/${selectedCollegeId}/`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.clubs && data.clubs.length > 0) {
+                    // Add clubs from the college
+                    data.clubs.forEach(club => {
+                        const option = document.createElement('option');
+                        option.value = club.id;
+                        option.text = club.name;
+                        clubSelect.appendChild(option);
+                    });
+                } else {
+                    // No clubs available for this college
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.text = 'No clubs available for this college yet';
+                    option.disabled = true;
+                    clubSelect.appendChild(option);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching clubs:', error);
+                const option = document.createElement('option');
+                option.value = '';
+                option.text = 'Error loading clubs. Please try again.';
+                option.disabled = true;
+                clubSelect.appendChild(option);
+            });
+    });
+    
+    // Trigger change event if college is already selected (edit case)
+    if (collegeSelect.value) {
+        collegeSelect.dispatchEvent(new Event('change'));
+    }
+});
 </script>
 {% endblock %}

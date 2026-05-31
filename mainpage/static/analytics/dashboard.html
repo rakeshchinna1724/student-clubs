@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Dashboard | Student Club</title>
+    <style>
+        :root {
+            --ink: #101828;
+            --muted: #667085;
+            --line: #d0d5dd;
+            --panel: #ffffff;
+            --page: #eef2f6;
+            --blue: #2563eb;
+            --green: #059669;
+            --amber: #d97706;
+            --red: #dc2626;
+            --violet: #7c3aed;
+            --cyan: #0891b2;
+            --shadow: 0 16px 45px rgba(15, 23, 42, 0.11);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Inter, Segoe UI, Arial, sans-serif;
+            color: var(--ink);
+            background:
+                linear-gradient(135deg, rgba(238, 242, 246, 0.96), rgba(224, 231, 239, 0.92)),
+                url("https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&w=1800&q=80") center/cover fixed;
+        }
+
+        button,
+        select {
+            font: inherit;
+        }
+
+        .shell {
+            width: min(1440px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 24px 0 40px;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .brand-mark {
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--blue), var(--green));
+            display: grid;
+            place-items: center;
+            color: white;
+            font-weight: 800;
+            box-shadow: var(--shadow);
+        }
+
+        .brand h1 {
+            margin: 0;
+            font-size: clamp(1.35rem, 3vw, 2.15rem);
+            line-height: 1.1;
+        }
+
+        .brand p {
+            margin: 4px 0 0;
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .control,
+        .button {
+            min-height: 40px;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--ink);
+        }
+
+        .control {
+            padding: 0 12px;
+        }
+
+        .button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 14px;
+            cursor: pointer;
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+        }
+
+        .button.primary {
+            color: white;
+            background: var(--blue);
+            border-color: var(--blue);
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.6fr);
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.94);
+            border: 1px solid rgba(255, 255, 255, 0.72);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+
+        .overview {
+            padding: 22px;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 18px;
+            align-items: center;
+        }
+
+        .overview h2 {
+            margin: 0 0 8px;
+            font-size: clamp(1.4rem, 3vw, 2.6rem);
+            line-height: 1.05;
+        }
+
+        .overview p {
+            max-width: 720px;
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .health-ring {
+            width: 148px;
+            aspect-ratio: 1;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            background: conic-gradient(var(--green) var(--score-angle), #e5e7eb 0deg);
+            position: relative;
+        }
+
+        .health-ring::after {
+            content: "";
+            position: absolute;
+            inset: 14px;
+            border-radius: 50%;
+            background: white;
+        }
+
+        .health-ring strong,
+        .health-ring span {
+            position: relative;
+            z-index: 1;
+            display: block;
+            text-align: center;
+        }
+
+        .health-ring strong {
+            font-size: 1.85rem;
+        }
+
+        .health-ring span {
+            color: var(--muted);
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .status-panel {
+            padding: 18px;
+            display: grid;
+            align-content: space-between;
+            gap: 20px;
+        }
+
+        .status-list {
+            display: grid;
+            gap: 10px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .status-list li {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eaecf0;
+            color: var(--muted);
+        }
+
+        .status-list strong {
+            color: var(--ink);
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .kpi {
+            padding: 16px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .kpi::before {
+            content: "";
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: 5px;
+            background: var(--accent-color);
+        }
+
+        .kpi span {
+            display: block;
+            color: var(--muted);
+            font-size: 0.84rem;
+            margin-bottom: 10px;
+        }
+
+        .kpi strong {
+            display: block;
+            font-size: 2rem;
+            line-height: 1;
+        }
+
+        .kpi small {
+            display: block;
+            margin-top: 10px;
+            color: var(--muted);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
+            gap: 16px;
+        }
+
+        .main-charts,
+        .side-charts {
+            display: grid;
+            gap: 16px;
+        }
+
+        .chart-card {
+            padding: 18px;
+        }
+
+        .chart-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .chart-head h3 {
+            margin: 0;
+            font-size: 1.08rem;
+        }
+
+        .chart-head p {
+            margin: 4px 0 0;
+            color: var(--muted);
+            font-size: 0.9rem;
+            line-height: 1.45;
+        }
+
+        .badge {
+            padding: 6px 10px;
+            border-radius: 999px;
+            color: #155e75;
+            background: #cffafe;
+            white-space: nowrap;
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        .canvas-wrap {
+            position: relative;
+            width: 100%;
+            height: 320px;
+        }
+
+        .canvas-wrap.short {
+            height: 260px;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .insight-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .insight {
+            padding: 14px;
+            border-radius: 8px;
+            background: #f8fafc;
+            border: 1px solid #eaecf0;
+        }
+
+        .insight span {
+            display: block;
+            color: var(--muted);
+            font-size: 0.82rem;
+            margin-bottom: 8px;
+        }
+
+        .insight strong {
+            font-size: 1.25rem;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 620px;
+        }
+
+        th,
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #eaecf0;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        th {
+            color: var(--muted);
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .empty {
+            padding: 20px;
+            border: 1px dashed var(--line);
+            color: var(--muted);
+            background: #f8fafc;
+            border-radius: 8px;
+            line-height: 1.55;
+        }
+
+        .toast {
+            position: fixed;
+            right: 18px;
+            bottom: 18px;
+            max-width: 340px;
+            padding: 14px 16px;
+            border-radius: 8px;
+            color: white;
+            background: #111827;
+            box-shadow: var(--shadow);
+            transform: translateY(90px);
+            opacity: 0;
+            transition: transform 0.25s ease, opacity 0.25s ease;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        @media (max-width: 1180px) {
+            .kpi-grid {
+                grid-template-columns: repeat(3, minmax(150px, 1fr));
+            }
+
+            .dashboard-grid,
+            .hero {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 760px) {
+            .shell {
+                width: min(100% - 20px, 1440px);
+                padding-top: 14px;
+            }
+
+            .topbar,
+            .overview,
+            .chart-head {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .overview {
+                grid-template-columns: 1fr;
+            }
+
+            .health-ring {
+                width: 128px;
+            }
+
+            .kpi-grid,
+            .insight-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .canvas-wrap {
+                height: 270px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="shell">
+        <header class="topbar">
+            <div class="brand">
+                <div class="brand-mark">SC</div>
+                <div>
+                    <h1>Analytics Dashboard</h1>
+                    <p>Live student club performance, engagement, and activity charts.</p>
+                </div>
+            </div>
+            <div class="toolbar">
+                <select id="snapshotLimit" class="control" aria-label="Trend window">
+                    <option value="12">Last 12 snapshots</option>
+                    <option value="24">Last 24 snapshots</option>
+                    <option value="48">Last 48 snapshots</option>
+                </select>
+                <button class="button" id="exportCsv" type="button">Export CSV</button>
+                <button class="button primary" id="refreshNow" type="button">Refresh</button>
+            </div>
+        </header>
+
+        <section class="hero">
+            <article class="panel overview">
+                <div>
+                    <h2 id="headline">Loading analytics...</h2>
+                    <p id="summaryText">Connecting to the existing live statistics endpoint and preparing dashboard charts.</p>
+                </div>
+                <div class="health-ring" id="healthRing" style="--score-angle: 0deg">
+                    <div>
+                        <strong id="healthScore">0</strong>
+                        <span>Health</span>
+                    </div>
+                </div>
+            </article>
+
+            <aside class="panel status-panel">
+                <ul class="status-list">
+                    <li><span>Data source</span><strong>/live-stats/</strong></li>
+                    <li><span>Last refresh</span><strong id="lastRefresh">Waiting</strong></li>
+                    <li><span>Snapshots</span><strong id="snapshotCount">0 saved</strong></li>
+                </ul>
+                <div class="empty" id="dataNote">Trend charts become richer as this page collects snapshots in your browser.</div>
+            </aside>
+        </section>
+
+        <section class="kpi-grid" id="kpiGrid" aria-label="Key analytics"></section>
+
+        <section class="dashboard-grid">
+            <div class="main-charts">
+                <article class="panel chart-card">
+                    <div class="chart-head">
+                        <div>
+                            <h3>Platform totals</h3>
+                            <p>Comparison of members, posts, clubs, events, announcements, and messages.</p>
+                        </div>
+                        <span class="badge">Bar chart</span>
+                    </div>
+                    <div class="canvas-wrap">
+                        <canvas id="totalsChart"></canvas>
+                    </div>
+                </article>
+
+                <article class="panel chart-card">
+                    <div class="chart-head">
+                        <div>
+                            <h3>Growth trend</h3>
+                            <p>Browser-side snapshots captured over refreshes, using the selected trend window.</p>
+                        </div>
+                        <span class="badge">Line chart</span>
+                    </div>
+                    <div class="canvas-wrap">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </article>
+
+                <article class="panel chart-card">
+                    <div class="chart-head">
+                        <div>
+                            <h3>Analytics insights</h3>
+                            <p>Useful ratios from the current live dashboard snapshot.</p>
+                        </div>
+                    </div>
+                    <div class="insight-grid" id="insightGrid"></div>
+                </article>
+            </div>
+
+            <aside class="side-charts">
+                <article class="panel chart-card">
+                    <div class="chart-head">
+                        <div>
+                            <h3>Activity mix</h3>
+                            <p>Distribution of content and communication activity.</p>
+                        </div>
+                        <span class="badge">Donut</span>
+                    </div>
+                    <div class="canvas-wrap short">
+                        <canvas id="mixChart"></canvas>
+                    </div>
+                </article>
+
+                <article class="panel chart-card">
+                    <div class="chart-head">
+                        <div>
+                            <h3>Engagement balance</h3>
+                            <p>Posts, events, announcements, and messages normalized together.</p>
+                        </div>
+                        <span class="badge">Radar</span>
+                    </div>
+                    <div class="canvas-wrap short">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                </article>
+
+                <article class="panel chart-card">
+                    <div class="chart-head">
+                        <div>
+                            <h3>Recent snapshots</h3>
+                            <p>Stored locally in this browser for chart history.</p>
+                        </div>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Members</th>
+                                    <th>Posts</th>
+                                    <th>Events</th>
+                                    <th>Messages</th>
+                                </tr>
+                            </thead>
+                            <tbody id="snapshotTable"></tbody>
+                        </table>
+                    </div>
+                </article>
+            </aside>
+        </section>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script>
+        const STORAGE_KEY = "studentClubAnalyticsSnapshots";
+        const palette = ["#2563eb", "#059669", "#d97706", "#dc2626", "#7c3aed", "#0891b2"];
+        const labels = [
+            ["active_members", "Members", "Registered students"],
+            ["posts_shared", "Posts", "Posts shared"],
+            ["clubs_count", "Clubs", "Clubs"],
+            ["events_count", "Events", "Events created"],
+            ["announcements_count", "Announcements", "Announcements"],
+            ["messages_count", "Messages", "Messages sent"]
+        ];
+
+        const els = {
+            headline: document.getElementById("headline"),
+            summaryText: document.getElementById("summaryText"),
+            healthScore: document.getElementById("healthScore"),
+            healthRing: document.getElementById("healthRing"),
+            lastRefresh: document.getElementById("lastRefresh"),
+            snapshotCount: document.getElementById("snapshotCount"),
+            dataNote: document.getElementById("dataNote"),
+            kpiGrid: document.getElementById("kpiGrid"),
+            insightGrid: document.getElementById("insightGrid"),
+            snapshotTable: document.getElementById("snapshotTable"),
+            snapshotLimit: document.getElementById("snapshotLimit"),
+            toast: document.getElementById("toast")
+        };
+
+        function clamp(value, min, max) {
+            return Math.min(Math.max(value, min), max);
+        }
+
+        function formatNumber(value) {
+            return Number(value || 0).toLocaleString();
+        }
+
+        function loadSnapshots() {
+            try {
+                return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+            } catch {
+                return [];
+            }
+        }
+
+        function saveSnapshots(snapshots) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshots.slice(-80)));
+        }
+
+        function normalizeStats(raw) {
+            return labels.reduce((acc, item) => {
+                acc[item[0]] = Number(raw[item[0]] || 0);
+                return acc;
+            }, {});
+        }
+
+        function addSnapshot(stats) {
+            const snapshots = loadSnapshots();
+            const now = new Date();
+            const latest = snapshots[snapshots.length - 1];
+            const current = { timestamp: now.toISOString(), ...stats };
+            if (!latest || Object.keys(stats).some((key) => Number(latest[key]) !== Number(stats[key]))) {
+                snapshots.push(current);
+            } else {
+                snapshots[snapshots.length - 1] = current;
+            }
+            saveSnapshots(snapshots);
+            return loadSnapshots();
+        }
+
+        function drawText(ctx, text, x, y, options = {}) {
+            ctx.save();
+            ctx.fillStyle = options.color || "#101828";
+            ctx.font = `${options.weight || 600} ${options.size || 12}px Inter, Segoe UI, Arial`;
+            ctx.textAlign = options.align || "left";
+            ctx.textBaseline = options.baseline || "middle";
+            ctx.fillText(text, x, y);
+            ctx.restore();
+        }
+
+        function prepareCanvas(canvas) {
+            const rect = canvas.getBoundingClientRect();
+            const ratio = window.devicePixelRatio || 1;
+            canvas.width = Math.max(1, Math.floor(rect.width * ratio));
+            canvas.height = Math.max(1, Math.floor(rect.height * ratio));
+            const ctx = canvas.getContext("2d");
+            ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+            return { ctx, width: rect.width, height: rect.height };
+        }
+
+        function drawBarChart(canvas, stats) {
+            const { ctx, width, height } = prepareCanvas(canvas);
+            ctx.clearRect(0, 0, width, height);
+            const padding = { top: 18, right: 18, bottom: 52, left: 46 };
+            const values = labels.map(([key]) => stats[key]);
+            const max = Math.max(...values, 1);
+            const plotW = width - padding.left - padding.right;
+            const plotH = height - padding.top - padding.bottom;
+            const barGap = 14;
+            const barW = Math.max(18, (plotW - barGap * (values.length - 1)) / values.length);
+
+            ctx.strokeStyle = "#eaecf0";
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 4; i += 1) {
+                const y = padding.top + (plotH / 4) * i;
+                ctx.beginPath();
+                ctx.moveTo(padding.left, y);
+                ctx.lineTo(width - padding.right, y);
+                ctx.stroke();
+                drawText(ctx, formatNumber(Math.round(max - (max / 4) * i)), padding.left - 8, y, {
+                    color: "#667085",
+                    size: 11,
+                    align: "right"
+                });
+            }
+
+            values.forEach((value, index) => {
+                const x = padding.left + index * (barW + barGap);
+                const barH = (value / max) * plotH;
+                const y = padding.top + plotH - barH;
+                ctx.fillStyle = palette[index];
+                ctx.beginPath();
+                ctx.roundRect(x, y, barW, barH || 2, 6);
+                ctx.fill();
+                drawText(ctx, formatNumber(value), x + barW / 2, y - 10, {
+                    color: "#344054",
+                    size: 11,
+                    align: "center"
+                });
+                drawText(ctx, labels[index][1], x + barW / 2, height - 24, {
+                    color: "#667085",
+                    size: 11,
+                    align: "center"
+                });
+            });
+        }
+
+        function drawTrendChart(canvas, snapshots) {
+            const { ctx, width, height } = prepareCanvas(canvas);
+            ctx.clearRect(0, 0, width, height);
+            const padding = { top: 20, right: 22, bottom: 42, left: 46 };
+            const selected = snapshots.slice(-Number(els.snapshotLimit.value || 12));
+            const keys = ["active_members", "posts_shared", "messages_count"];
+            const plotW = width - padding.left - padding.right;
+            const plotH = height - padding.top - padding.bottom;
+            const max = Math.max(...selected.flatMap((row) => keys.map((key) => row[key] || 0)), 1);
+
+            ctx.strokeStyle = "#eaecf0";
+            for (let i = 0; i <= 4; i += 1) {
+                const y = padding.top + (plotH / 4) * i;
+                ctx.beginPath();
+                ctx.moveTo(padding.left, y);
+                ctx.lineTo(width - padding.right, y);
+                ctx.stroke();
+            }
+
+            if (selected.length < 2) {
+                drawText(ctx, "Refresh over time to build a real trend line.", width / 2, height / 2, {
+                    color: "#667085",
+                    size: 14,
+                    align: "center"
+                });
+                return;
+            }
+
+            keys.forEach((key, seriesIndex) => {
+                ctx.strokeStyle = palette[seriesIndex];
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                selected.forEach((row, index) => {
+                    const x = padding.left + (plotW / (selected.length - 1)) * index;
+                    const y = padding.top + plotH - ((row[key] || 0) / max) * plotH;
+                    if (index === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                });
+                ctx.stroke();
+
+                selected.forEach((row, index) => {
+                    const x = padding.left + (plotW / (selected.length - 1)) * index;
+                    const y = padding.top + plotH - ((row[key] || 0) / max) * plotH;
+                    ctx.fillStyle = "#fff";
+                    ctx.strokeStyle = palette[seriesIndex];
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(x, y, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                });
+            });
+
+            keys.forEach((key, index) => {
+                const x = padding.left + index * 132;
+                ctx.fillStyle = palette[index];
+                ctx.fillRect(x, height - 20, 12, 12);
+                drawText(ctx, labels.find(([labelKey]) => labelKey === key)[1], x + 18, height - 14, {
+                    color: "#475467",
+                    size: 12
+                });
+            });
+        }
+
+        function drawDonutChart(canvas, stats) {
+            const { ctx, width, height } = prepareCanvas(canvas);
+            ctx.clearRect(0, 0, width, height);
+            const entries = [
+                ["Posts", stats.posts_shared],
+                ["Events", stats.events_count],
+                ["Announcements", stats.announcements_count],
+                ["Messages", stats.messages_count]
+            ];
+            const total = entries.reduce((sum, [, value]) => sum + value, 0) || 1;
+            const cx = width / 2;
+            const cy = height / 2 - 6;
+            const radius = Math.min(width, height) * 0.31;
+            let angle = -Math.PI / 2;
+
+            entries.forEach(([, value], index) => {
+                const slice = (value / total) * Math.PI * 2;
+                ctx.beginPath();
+                ctx.strokeStyle = palette[index + 1];
+                ctx.lineWidth = 28;
+                ctx.arc(cx, cy, radius, angle, angle + slice);
+                ctx.stroke();
+                angle += slice;
+            });
+
+            drawText(ctx, formatNumber(total), cx, cy - 8, { size: 24, align: "center", weight: 800 });
+            drawText(ctx, "activities", cx, cy + 18, { size: 12, align: "center", color: "#667085" });
+
+            entries.forEach(([name, value], index) => {
+                const x = 20 + (index % 2) * (width / 2);
+                const y = height - 42 + Math.floor(index / 2) * 22;
+                ctx.fillStyle = palette[index + 1];
+                ctx.fillRect(x, y - 6, 10, 10);
+                drawText(ctx, `${name}: ${formatNumber(value)}`, x + 16, y, { size: 11, color: "#475467" });
+            });
+        }
+
+        function drawRadarChart(canvas, stats) {
+            const { ctx, width, height } = prepareCanvas(canvas);
+            ctx.clearRect(0, 0, width, height);
+            const entries = [
+                ["Posts", stats.posts_shared],
+                ["Events", stats.events_count],
+                ["Announcements", stats.announcements_count],
+                ["Messages", stats.messages_count],
+                ["Members", stats.active_members]
+            ];
+            const max = Math.max(...entries.map(([, value]) => value), 1);
+            const cx = width / 2;
+            const cy = height / 2;
+            const radius = Math.min(width, height) * 0.3;
+
+            for (let ring = 1; ring <= 4; ring += 1) {
+                ctx.beginPath();
+                entries.forEach(([,], index) => {
+                    const angle = -Math.PI / 2 + (Math.PI * 2 * index) / entries.length;
+                    const x = cx + Math.cos(angle) * radius * (ring / 4);
+                    const y = cy + Math.sin(angle) * radius * (ring / 4);
+                    if (index === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                });
+                ctx.closePath();
+                ctx.strokeStyle = "#eaecf0";
+                ctx.stroke();
+            }
+
+            ctx.beginPath();
+            entries.forEach(([name, value], index) => {
+                const angle = -Math.PI / 2 + (Math.PI * 2 * index) / entries.length;
+                const fullX = cx + Math.cos(angle) * (radius + 28);
+                const fullY = cy + Math.sin(angle) * (radius + 28);
+                const x = cx + Math.cos(angle) * radius * (value / max);
+                const y = cy + Math.sin(angle) * radius * (value / max);
+                if (index === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+                drawText(ctx, name, fullX, fullY, {
+                    size: 11,
+                    color: "#667085",
+                    align: fullX < cx - 5 ? "right" : fullX > cx + 5 ? "left" : "center"
+                });
+            });
+            ctx.closePath();
+            ctx.fillStyle = "rgba(37, 99, 235, 0.18)";
+            ctx.strokeStyle = "#2563eb";
+            ctx.lineWidth = 2;
+            ctx.fill();
+            ctx.stroke();
+        }
+
+        function renderKpis(stats) {
+            els.kpiGrid.innerHTML = labels.map(([key, short, label], index) => `
+                <article class="panel kpi" style="--accent-color: ${palette[index]}">
+                    <span>${label}</span>
+                    <strong>${formatNumber(stats[key])}</strong>
+                    <small>${short} currently tracked</small>
+                </article>
+            `).join("");
+        }
+
+        function renderInsights(stats) {
+            const memberBase = Math.max(stats.active_members, 1);
+            const contentTotal = stats.posts_shared + stats.events_count + stats.announcements_count;
+            const commsTotal = stats.messages_count;
+            const clubsBase = Math.max(stats.clubs_count, 1);
+            els.insightGrid.innerHTML = [
+                ["Content per member", (contentTotal / memberBase).toFixed(2)],
+                ["Messages per member", (commsTotal / memberBase).toFixed(2)],
+                ["Members per club", (stats.active_members / clubsBase).toFixed(2)]
+            ].map(([label, value]) => `
+                <div class="insight">
+                    <span>${label}</span>
+                    <strong>${value}</strong>
+                </div>
+            `).join("");
+        }
+
+        function calculateHealth(stats) {
+            const content = stats.posts_shared + stats.events_count + stats.announcements_count;
+            const participation = stats.active_members ? clamp((content + stats.messages_count) / stats.active_members, 0, 10) : 0;
+            const breadth = clamp(stats.clubs_count * 8, 0, 35);
+            return Math.round(clamp(participation * 6.5 + breadth, 0, 100));
+        }
+
+        function renderTable(snapshots) {
+            const recent = snapshots.slice(-8).reverse();
+            els.snapshotTable.innerHTML = recent.map((row) => `
+                <tr>
+                    <td>${new Date(row.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</td>
+                    <td>${formatNumber(row.active_members)}</td>
+                    <td>${formatNumber(row.posts_shared)}</td>
+                    <td>${formatNumber(row.events_count)}</td>
+                    <td>${formatNumber(row.messages_count)}</td>
+                </tr>
+            `).join("");
+        }
+
+        function renderAll(stats, snapshots) {
+            const activityTotal = stats.posts_shared + stats.events_count + stats.announcements_count + stats.messages_count;
+            const score = calculateHealth(stats);
+            els.headline.textContent = `${formatNumber(stats.active_members)} members across ${formatNumber(stats.clubs_count)} clubs`;
+            els.summaryText.textContent = `${formatNumber(activityTotal)} total activity records are visible in the live snapshot, including posts, events, announcements, and messages.`;
+            els.healthScore.textContent = score;
+            els.healthRing.style.setProperty("--score-angle", `${score * 3.6}deg`);
+            els.lastRefresh.textContent = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+            els.snapshotCount.textContent = `${snapshots.length} saved`;
+            els.dataNote.textContent = snapshots.length < 2
+                ? "One snapshot is saved. Refresh again later to build trend lines."
+                : "Trend charts are based on snapshots saved locally in this browser.";
+
+            renderKpis(stats);
+            renderInsights(stats);
+            renderTable(snapshots);
+            drawBarChart(document.getElementById("totalsChart"), stats);
+            drawTrendChart(document.getElementById("trendChart"), snapshots);
+            drawDonutChart(document.getElementById("mixChart"), stats);
+            drawRadarChart(document.getElementById("radarChart"), stats);
+        }
+
+        function showToast(message) {
+            els.toast.textContent = message;
+            els.toast.classList.add("show");
+            window.setTimeout(() => els.toast.classList.remove("show"), 2600);
+        }
+
+        async function refresh() {
+            try {
+                const response = await fetch("/live-stats/", { headers: { "Accept": "application/json" } });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const stats = normalizeStats(await response.json());
+                const snapshots = addSnapshot(stats);
+                renderAll(stats, snapshots);
+                showToast("Analytics refreshed from live stats.");
+            } catch (error) {
+                const snapshots = loadSnapshots();
+                const fallback = snapshots[snapshots.length - 1] || normalizeStats({});
+                renderAll(fallback, snapshots);
+                showToast("Live stats unavailable. Showing saved local data.");
+            }
+        }
+
+        function exportCsv() {
+            const snapshots = loadSnapshots();
+            const header = ["timestamp", ...labels.map(([key]) => key)];
+            const rows = snapshots.map((row) => header.map((key) => row[key] ?? "").join(","));
+            const csv = [header.join(","), ...rows].join("\n");
+            const blob = new Blob([csv], { type: "text/csv" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "student-club-analytics.csv";
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        document.getElementById("refreshNow").addEventListener("click", refresh);
+        document.getElementById("exportCsv").addEventListener("click", exportCsv);
+        els.snapshotLimit.addEventListener("change", refresh);
+        window.addEventListener("resize", () => {
+            const snapshots = loadSnapshots();
+            const latest = snapshots[snapshots.length - 1] || normalizeStats({});
+            renderAll(latest, snapshots);
+        });
+
+        refresh();
+        window.setInterval(refresh, 60000);
+    </script>
+</body>
+</html>

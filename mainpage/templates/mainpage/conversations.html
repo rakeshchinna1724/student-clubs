@@ -35,7 +35,11 @@
                                                     {% else %}
                                                         <strong>{{ item.latest_message.sender.name }}:</strong>
                                                     {% endif %}
-                                                    {{ item.latest_message.content|truncatewords:10 }}
+                                                    {% if item.latest_message.content %}
+                                                        {{ item.latest_message.content|truncatewords:10 }}
+                                                    {% elif item.latest_message.attachment %}
+                                                        Shared file: {{ item.latest_message.attachment_name }}
+                                                    {% endif %}
                                                 </small>
                                                 <small class="text-muted">
                                                     {{ item.latest_message.created_at|date:"M d, Y H:i" }}
