@@ -1,0 +1,136 @@
+{% extends 'mainpage/base.html' %}
+
+{% block title %}Verify College Email - Student Club{% endblock %}
+
+{% block content %}
+<style>
+    .verify-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 20px;
+    }
+
+    .verify-box {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        width: 100%;
+        max-width: 460px;
+        padding: 45px 38px;
+        text-align: center;
+    }
+
+    .verify-box h1 {
+        color: #333;
+        font-size: 30px;
+        margin-bottom: 12px;
+        font-weight: bold;
+    }
+
+    .verify-box p {
+        color: #666;
+        font-size: 15px;
+        line-height: 1.6;
+        margin-bottom: 28px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+        text-align: left;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 10px;
+        color: #333;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 14px 16px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 18px;
+        letter-spacing: 4px;
+        text-align: center;
+        box-sizing: border-box;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+
+    .verify-btn {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 8px;
+    }
+
+    .form-errors {
+        background: #fee;
+        border-left: 4px solid #f77;
+        padding: 12px;
+        border-radius: 5px;
+        margin-bottom: 16px;
+        color: #c33;
+        text-align: left;
+    }
+
+    .back-link {
+        margin-top: 24px;
+        color: #666;
+        font-size: 14px;
+    }
+
+    .back-link a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: bold;
+    }
+</style>
+
+<div class="verify-container">
+    <div class="verify-box">
+        <h1>Verify College Email</h1>
+        <p>
+            We sent a 6-digit OTP to <strong>{{ college_email }}</strong> for
+            <strong>{{ college_name }}</strong>.
+        </p>
+
+        {% if form.non_field_errors %}
+            <div class="form-errors">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="{{ form.otp.id_for_label }}">OTP Code</label>
+                {{ form.otp }}
+                {% if form.otp.errors %}
+                    <div class="form-errors">{{ form.otp.errors }}</div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="verify-btn">Verify & Complete Registration</button>
+        </form>
+
+        <div class="back-link">
+            Wrong email? <a href="{% url 'college_register' %}">Start again</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

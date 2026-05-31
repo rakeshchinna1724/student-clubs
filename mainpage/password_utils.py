@@ -90,6 +90,58 @@ def send_password_reset_email(user_email, otp, token):
         return False
 
 
+def send_college_registration_otp_email(college_email, otp, college_name):
+    """Send OTP to verify a college registration email address."""
+    subject = 'College Registration OTP - Student Club'
+    message = f"""
+    Hello,
+
+    A college registration was started for {college_name}.
+
+    Your One-Time Password (OTP) is: {otp}
+
+    This OTP will expire in 10 minutes. Please do not share this code with anyone.
+
+    If you did not request this registration, please ignore this email.
+
+    Best regards,
+    Student Club Administration
+    """
+
+    html_message = f"""
+    <html>
+        <body style="font-family: Arial, sans-serif; background-color: #f5f5f5; padding: 20px;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                <h2 style="color: #333; margin-bottom: 20px;">College Registration Verification</h2>
+                <p style="color: #666; margin-bottom: 20px;">A college registration was started for <strong>{college_name}</strong>.</p>
+                <div style="background-color: #f0f0f0; padding: 20px; border-radius: 5px; margin: 30px 0; text-align: center;">
+                    <p style="color: #666; margin: 0 0 10px 0;">Your One-Time Password (OTP):</p>
+                    <p style="color: #2196F3; font-size: 32px; font-weight: bold; letter-spacing: 5px; margin: 0;">{otp}</p>
+                </div>
+                <p style="color: #666; margin-bottom: 20px;"><strong>Important:</strong> This OTP will expire in 10 minutes.</p>
+                <p style="color: #666; margin-bottom: 20px;">If you did not request this registration, please ignore this email.</p>
+                <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+                <p style="color: #999; font-size: 12px; margin: 0;">Student Club Administration<br>This is an automated message, please do not reply.</p>
+            </div>
+        </body>
+    </html>
+    """
+
+    try:
+        send_mail(
+            subject,
+            message,
+            'noreply@studentclub.com',
+            [college_email],
+            html_message=html_message,
+            fail_silently=False,
+        )
+        return True
+    except Exception as e:
+        print(f"Failed to send college registration OTP: {str(e)}")
+        return False
+
+
 def create_password_reset_request(user):
     """
     Create a password reset request for a user

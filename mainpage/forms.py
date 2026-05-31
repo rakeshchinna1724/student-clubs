@@ -136,6 +136,20 @@ class CollegeLoginForm(AuthenticationForm):
     )
 
 
+class CollegeOTPForm(forms.Form):
+    """Form for verifying college registration OTP"""
+    otp = forms.CharField(
+        max_length=6,
+        min_length=6,
+        widget=forms.TextInput(attrs={
+            'class': INPUT_CLASS,
+            'placeholder': 'Enter 6-digit OTP',
+            'autofocus': True,
+            'maxlength': 6,
+        }),
+    )
+
+
 class StyledAuthenticationForm(AuthenticationForm):
     username = forms.CharField(
         widget=forms.TextInput(attrs={'class': INPUT_CLASS, 'placeholder': 'Username', 'autofocus': True})

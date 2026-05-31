@@ -4,13 +4,15 @@ from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
+from django.utils import timezone
 from django.db.models import Count, Prefetch, Q
 from django.contrib import messages as django_messages
+from datetime import datetime, timedelta
 
-from .forms import AdminPasswordEditForm, ClubAdminRegistrationForm, PostForm, StyledAuthenticationForm, StudentAccountForm, CommentForm, ShareForm, EventForm, AnnouncementForm, MessageForm, ForgotPasswordForm, PasswordResetOTPForm, PasswordResetForm, CollegeRegistrationForm, CollegeLoginForm
+from .forms import AdminPasswordEditForm, ClubAdminRegistrationForm, PostForm, StyledAuthenticationForm, StudentAccountForm, CommentForm, ShareForm, EventForm, AnnouncementForm, MessageForm, ForgotPasswordForm, PasswordResetOTPForm, PasswordResetForm, CollegeRegistrationForm, CollegeLoginForm, CollegeOTPForm
 from .models import Club, Post, Student, Like, Comment, Share, Event, EventRSVP, Announcement, Notification, Message, UserWarning, BlockedUser, College, CollegeAdmin
 from .utils import contains_bad_words, add_warning, should_block_user, can_message
-from .password_utils import create_password_reset_request, send_password_reset_email, verify_otp_and_get_reset_request, reset_user_password
+from .password_utils import create_password_reset_request, send_password_reset_email, verify_otp_and_get_reset_request, reset_user_password, generate_otp, send_college_registration_otp_email
 
 
 def build_live_stats():
@@ -83,7 +85,9 @@ def role_redirect(user):
         return redirect('club_dashboard')
     if hasattr(user, 'student_profile'):
         return redirect('student_home')
-    return redirect('college_login')
+    if user.is_staff or user.is_superuser:
+        return redirect('/admin/')
+    return redirect('logout')
 
 
 def admin_signup(request):
@@ -144,33 +148,109 @@ def college_register(request):
     if request.method == 'POST':
         form = CollegeRegistrationForm(request.POST)
         if form.is_valid():
-            # Create user
-            user = form.save(commit=False)
-            user.save()
-            
-            # Create college
-            college = College.objects.create(
-                name=form.cleaned_data['college_name'],
-                email=form.cleaned_data['college_email'],
-                admin_name=form.cleaned_data['admin_name'],
-                phone=form.cleaned_data['phone'],
-                address=form.cleaned_data['address'],
-                city=form.cleaned_data['city'],
-                state=form.cleaned_data['state'],
-                pincode=form.cleaned_data['pincode'],
-                registration_number=form.cleaned_data['registration_number'],
+            otp = generate_otp()
+            pending_registration = {
+                'college_name': form.cleaned_data['college_name'],
+                'college_email': form.cleaned_data['college_email'],
+                'admin_name': form.cleaned_data['admin_name'],
+                'phone': form.cleaned_data['phone'],
+                'address': form.cleaned_data['address'],
+                'city': form.cleaned_data['city'],
+                'state': form.cleaned_data['state'],
+                'pincode': form.cleaned_data['pincode'],
+                'registration_number': form.cleaned_data['registration_number'],
+                'username': form.cleaned_data['username'],
+                'password': form.cleaned_data['password1'],
+                'otp': otp,
+                'expires_at': (timezone.now() + timedelta(minutes=10)).isoformat(),
+            }
+
+            email_sent = send_college_registration_otp_email(
+                pending_registration['college_email'],
+                otp,
+                pending_registration['college_name'],
             )
-            
-            # Create college admin
-            CollegeAdmin.objects.create(user=user, college=college)
-            
-            login(request, user)
-            django_messages.success(request, 'College registered successfully! Welcome to the platform.')
-            return redirect('college_dashboard')
+            if email_sent:
+                request.session['pending_college_registration'] = pending_registration
+                django_messages.success(request, 'OTP has been sent to the college email. Please verify to complete registration.')
+                return redirect('college_register_verify')
+            form.add_error('college_email', 'Could not send OTP. Please check the email settings and try again.')
     else:
         form = CollegeRegistrationForm()
 
     return render(request, 'mainpage/college_register.html', {'form': form})
+
+
+def college_register_verify(request):
+    """Verify college email OTP and create the college admin account."""
+    if request.user.is_authenticated:
+        return role_redirect(request.user)
+
+    pending_registration = request.session.get('pending_college_registration')
+    if not pending_registration:
+        django_messages.info(request, 'Please start college registration first.')
+        return redirect('college_register')
+
+    expires_at = datetime.fromisoformat(pending_registration['expires_at'])
+    if timezone.is_naive(expires_at):
+        expires_at = timezone.make_aware(expires_at)
+    if expires_at <= timezone.now():
+        request.session.pop('pending_college_registration', None)
+        django_messages.error(request, 'OTP expired. Please register again.')
+        return redirect('college_register')
+
+    if request.method == 'POST':
+        form = CollegeOTPForm(request.POST)
+        if form.is_valid():
+            if form.cleaned_data['otp'] != pending_registration['otp']:
+                form.add_error('otp', 'Invalid OTP. Please try again.')
+            elif User.objects.filter(username__iexact=pending_registration['username']).exists():
+                request.session.pop('pending_college_registration', None)
+                django_messages.error(request, 'This username was already taken. Please register again.')
+                return redirect('college_register')
+            elif College.objects.filter(name__iexact=pending_registration['college_name']).exists():
+                request.session.pop('pending_college_registration', None)
+                django_messages.error(request, 'This college is already registered. Please login.')
+                return redirect('college_login')
+            elif College.objects.filter(email__iexact=pending_registration['college_email']).exists():
+                request.session.pop('pending_college_registration', None)
+                django_messages.error(request, 'This college email is already registered. Please login.')
+                return redirect('college_login')
+            elif College.objects.filter(registration_number__iexact=pending_registration['registration_number']).exists():
+                request.session.pop('pending_college_registration', None)
+                django_messages.error(request, 'This registration number is already registered.')
+                return redirect('college_register')
+            else:
+                user = User.objects.create_user(
+                    username=pending_registration['username'],
+                    email=pending_registration['college_email'],
+                    password=pending_registration['password'],
+                )
+                college = College.objects.create(
+                    name=pending_registration['college_name'],
+                    email=pending_registration['college_email'],
+                    admin_name=pending_registration['admin_name'],
+                    phone=pending_registration['phone'],
+                    address=pending_registration['address'],
+                    city=pending_registration['city'],
+                    state=pending_registration['state'],
+                    pincode=pending_registration['pincode'],
+                    registration_number=pending_registration['registration_number'],
+                    is_verified=True,
+                )
+                CollegeAdmin.objects.create(user=user, college=college)
+                request.session.pop('pending_college_registration', None)
+                login(request, user)
+                django_messages.success(request, 'College email verified and registration completed.')
+                return redirect('college_dashboard')
+    else:
+        form = CollegeOTPForm()
+
+    return render(request, 'mainpage/college_register_verify.html', {
+        'form': form,
+        'college_email': pending_registration['college_email'],
+        'college_name': pending_registration['college_name'],
+    })
 
 
 def college_login(request):

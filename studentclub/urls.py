@@ -32,6 +32,7 @@ from mainpage.views import (
     admin_login,
     admin_signup,
     college_register,
+    college_register_verify,
     college_login,
     college_dashboard,
     college_clubs,
@@ -87,6 +88,7 @@ urlpatterns = [
     
     # College Routes
     path('college-register/', college_register, name='college_register'),
+    path('college-register/verify/', college_register_verify, name='college_register_verify'),
     path('college-login/', college_login, name='college_login'),
     path('college-dashboard/', college_dashboard, name='college_dashboard'),
     path('college/clubs/', college_clubs, name='college_clubs'),

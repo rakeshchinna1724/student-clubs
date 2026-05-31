@@ -48,7 +48,7 @@ SECRET_KEY = 'django-insecure-j1#_kcdbu1et20gi^2au3d=$czu8*st#0_cgcs)mk1$gzl!_dq
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['studentclub.onrender.com', 'student-clubs.onrender.com']
+ALLOWED_HOSTS = ['student-clubs.onrender.com', '127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -159,9 +159,9 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'  # Change this to your email provider
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'your_email@gmail.com'  # Change this
-EMAIL_HOST_PASSWORD = 'your_app_password'  # Change this to your app password
-DEFAULT_FROM_EMAIL = 'your_email@gmail.com'  # Change this
+EMAIL_HOST_USER = ''  # Change this
+EMAIL_HOST_PASSWORD = ''  # Change this to your app password
+DEFAULT_FROM_EMAIL = ''  # Change this
 
 # Session Configuration
 SESSION_COOKIE_AGE = 86400  # 24 hours
